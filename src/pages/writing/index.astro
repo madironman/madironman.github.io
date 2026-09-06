@@ -10,8 +10,9 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
   <section class="block">
     <h2>writing</h2>
     <p class="lede">
-      Long-form notes from bring-up and debug work. Each one is a mystery, a diagnosis and a fix.
-      Client details are described by mechanism, not by register map.
+      Notes on mechanisms that firmware engineers keep meeting: how things work, why they fail,
+      and what the fix pattern looks like. Everything here is public knowledge, written from the
+      point of view of someone who has hit it.
     </p>
     <ul class="posts">
       {posts.map((p) => (

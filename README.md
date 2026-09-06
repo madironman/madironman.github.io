@@ -1,6 +1,6 @@
-# madhevan-site
+# madironman.github.io
 
-Personal site of P. R. Madhevan. Built with [Astro](https://astro.build), deployed to GitHub Pages.
+Personal site of P. R. Madhevan. Built with [Astro](https://astro.build), deployed to GitHub Pages. Live at https://madironman.github.io.
 
 ## Run locally
 
@@ -21,7 +21,16 @@ Create `src/content/writing/<slug>.md` with frontmatter:
 
 Set `draft: true` to keep it out of the build.
 
+## Content rules
+
+Everything on the site is written under an employer NDA. The rules that keep it safe:
+
+- Experience describes the kind of work and the skills used. No customer part numbers, platform code names, defect specifics, roadmap items or internal metrics.
+- Writing covers public mechanisms: standards, architecture, debugging methods. Not client incidents.
+- Tooling cards describe the class of problem, not the implementation. No code, no repos.
+- Projects are pre-employment or generic study material only.
+- The resume PDF is not hosted here. Send it on request.
+
 ## Deploy
 
-Push to `main`. The workflow in `.github/workflows/deploy.yml` builds and publishes.
-In the repo settings, set Pages > Source to "GitHub Actions" once.
+Push to `main`. The workflow in `.github/workflows/deploy.yml` builds and publishes. Pages source is set to GitHub Actions.

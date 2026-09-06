@@ -10,73 +10,76 @@ export interface Project {
   link?: string;
 }
 
-// Tools written during 5312 pre-tapeout. Client code stays private; these are
-// planned clean-room rewrites. Set `github` once each repo exists.
-export const tools: Project[] = [
+// Tooling built for customers under NDA. The code belongs to them; these
+// cards describe the class of problem each tool solved, nothing more.
+export const tooling: Project[] = [
   {
-    name: 'Marbel',
-    status: 'wip',
-    statusLabel: 'rewrite in progress',
-    description: 'Reconstructs system state from a raw memory dump of a Cortex-R/M firmware: a Rabin-Karp scan to find live structures, and a bl/blx back-check stack unwinder that works without frame pointers.',
+    name: 'Memory-dump analyser',
+    status: 'past',
+    statusLabel: 'internal tool',
+    description: 'Rebuilds system state from a raw RAM dump of a Cortex-R/M firmware: locates live structures by signature scanning and recovers call stacks without frame pointers by validating branch-and-link return addresses.',
     tech: 'Python · ARM Thumb-2 · ELF/DWARF',
   },
   {
-    name: 'Hammer',
-    status: 'wip',
-    statusLabel: 'rewrite in progress',
-    description: 'Dynamic heap flame charts for FreeRTOS. Shows who allocated what, when, and how long it lived, so pool starvation and fragmentation are visible instead of inferred.',
-    tech: 'Python · FreeRTOS heap hooks',
-  },
-  {
-    name: 'Spade',
-    status: 'wip',
-    statusLabel: 'rewrite in progress',
-    description: 'Static analyser for struct padding and cache-line straddling. Reads DWARF, reports wasted bytes per struct, and suggests field reorderings.',
-    tech: 'Python · pyelftools',
-  },
-  {
-    name: 'Spark',
+    name: 'Heap profiler',
     status: 'past',
-    statusLabel: 'client tool',
-    description: 'CH347-based strap-pin automation with high-Z contention avoidance, so a CI job can reflash a board and change its boot mode with nobody in the lab.',
-    tech: 'Python · CH347 · GPIO',
+    statusLabel: 'internal tool',
+    description: 'Dynamic heap flame charts for an RTOS firmware. Shows who allocated what, when, and how long it lived, so pool starvation and fragmentation are visible instead of inferred.',
+    tech: 'Python · RTOS heap hooks',
   },
   {
-    name: 'Vista',
+    name: 'Struct layout analyser',
     status: 'past',
-    statusLabel: 'client tool',
-    description: 'WLAN automation rebuilt as a nightly regression suite across bands, channels and security modes. Sped the Veloce emulator about 400% and compressed a ROM tapeout cycle to one week.',
+    statusLabel: 'internal tool',
+    description: 'Static analysis of struct padding and cache-line straddling from DWARF. Reports wasted bytes per struct and suggests field reorderings.',
+    tech: 'Python · DWARF',
+  },
+  {
+    name: 'Remote board control',
+    status: 'past',
+    statusLabel: 'internal tool',
+    description: 'USB-bridge automation of boot-mode strap pins with bus-contention avoidance, so a CI job can reflash a board and change its boot mode with nobody in the lab.',
+    tech: 'Python · USB-to-GPIO bridge',
+  },
+  {
+    name: 'Emulator regression suite',
+    status: 'past',
+    statusLabel: 'internal tool',
+    description: 'WLAN automation rebuilt as a nightly regression across bands, channels and security modes, with the scheduling changes that multiplied emulator utilisation.',
     tech: 'Python · TCL · Jenkins CI',
   },
   {
-    name: 'OpenOCD register bridge',
+    name: 'Debug-port register bridge',
     status: 'past',
-    statusLabel: 'client tool',
-    description: 'Extended a register-level verification environment to reach a chip over OpenOCD when it had no JTAG, SDIO, PCIe or USB transport. Adopted by validation teams and reused on FPGA.',
+    statusLabel: 'internal tool',
+    description: 'Extended a register-level verification environment to reach a chip over OpenOCD when it had no other usable transport. Later reused on FPGA.',
     tech: 'TCL · OpenOCD · ARM ADIv5',
   },
 ];
 
-export const hardware: Project[] = [
+// Personal work. Everything here is either pre-employment or generic study
+// material with no connection to customer products.
+export const projects: Project[] = [
   {
     name: 'Mobile comms over TV White Space',
     status: 'past',
-    statusLabel: 'final-year project',
+    statusLabel: 'final-year project · 2020',
     description: 'Drove transmit and receive directly from Raspberry Pi GPIO pins instead of a dedicated RF transceiver, with Reed-Solomon forward error correction and POCSAG signalling.',
     tech: 'Raspberry Pi · GPIO bit-bang · Reed-Solomon · POCSAG',
   },
   {
-    name: 'Raspberry Pi provisioning client',
-    status: 'past',
-    statusLabel: 'lab build',
-    description: 'A drop-in replacement for the ARRIS lab provisioning client machine during a hardware shortage. Cut per-seat cost about 90% and brought up the CMTS behind it.',
-    tech: 'Raspberry Pi · DOCSIS · CMTS',
+    name: 'Firmware interview notes',
+    status: 'wip',
+    statusLabel: 'in progress',
+    description: 'Working notes from a structured pass over embedded and firmware fundamentals: C, bits, ARM architecture, buses, linkers, RTOS, networking. The pieces that turn into real insight end up in Writing.',
+    tech: 'Markdown · C',
   },
   {
-    name: 'Wi-Fi power-save sniffer',
-    status: 'wip',
-    statusLabel: 'planned',
-    description: 'A cheap dev-board tool that watches DTIM, PS-Poll and U-APSD behaviour on a live network and plots when a station actually sleeps versus when it should. Project log to follow.',
-    tech: 'ESP32 · 802.11 monitor mode · Python',
+    name: 'This site',
+    status: 'shipped',
+    statusLabel: 'live',
+    description: 'Static site with an arc-reactor HUD and a live oscilloscope trace drawn on a canvas. No framework on the client, no tracking.',
+    tech: 'Astro · Canvas · GitHub Pages',
+    github: 'https://github.com/madironman/madironman.github.io',
   },
 ];

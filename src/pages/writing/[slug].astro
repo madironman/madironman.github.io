@@ -18,7 +18,7 @@ const date = post.data.date.toLocaleDateString('en-GB', { day: 'numeric', month:
     <a class="back" href="/writing">← All writing</a>
     <header>
       <h1>{post.data.title}</h1>
-      <p class="meta">{date} · {minutes} min read · {post.data.tags.map((t) => `#${t}`).join('  ')}</p>
+      <p class="meta">{date} · {minutes} min read · <span class="tags">{post.data.tags.map((t) => `#${t}`).join('  ')}</span></p>
     </header>
     <div class="body"><Content /></div>
   </article>
