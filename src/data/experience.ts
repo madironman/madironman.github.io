@@ -19,8 +19,8 @@ export const jobs: Job[] = [
     client: 'embedUR Systems · semiconductor customer',
     period: 'Jul 2026 – present',
     bullets: [
-      'Leading host-side WLAN driver tooling and utilities for a Windows platform.',
-      'Details are under customer NDA. Ask me about the general shape of the work.',
+      'Building the driver-side applications and control utility for a Windows WLAN driver.',
+      'Technical lead for the engagement: design reviews, debug escalations and mentoring.',
     ],
   },
   {

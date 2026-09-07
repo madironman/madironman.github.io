@@ -16,7 +16,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
     <HeroCanvas />
     <div class="inner">
       <p class="eyebrow">Firmware · SoC · 802.11</p>
-      <h1>hi, <span class="name">madhevan</span> here.<span class="cursor"></span></h1>
+      <h1 class="type" data-text="hi, madhevan here." data-name="madhevan">hi, <span class="name">madhevan</span> <span class="nw">here.<span class="cursor"></span></span></h1>
       <p class="tag">
         Firmware and SoC systems engineer in Chennai. I work where firmware meets silicon:
         <b>Wi-Fi chips</b>, <b>low-power architecture</b> and <b>pre-silicon bring-up</b>.
@@ -27,8 +27,8 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
     </div>
   </section>
 
-  <section class="block" id="about">
-    <h2>about me</h2>
+  <section class="block reveal" id="about">
+    <h2><span class="num">01</span>about me</h2>
     <div class="about">
       <div>
         <p>
@@ -61,8 +61,8 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
     </div>
   </section>
 
-  <section class="block" id="experience">
-    <h2>experience</h2>
+  <section class="block reveal" id="experience">
+    <h2><span class="num">02</span>experience</h2>
     <div class="xp">
       <div class="tabs" role="tablist" aria-label="Engagements">
         {jobs.map((j, i) => (
@@ -77,19 +77,17 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
         </div>
       ))}
     </div>
-    <p class="note">Customer names and product details are left out on purpose. They're on my resume, which I'm happy to send.</p>
   </section>
 
-  <section class="block" id="writing">
-    <h2>writing</h2>
+  <section class="block reveal" id="writing">
+    <h2><span class="num">03</span>writing</h2>
     <p class="lede">
       Notes on mechanisms that firmware engineers keep meeting: how things work, why they fail,
-      and what the fix pattern looks like. Everything here is public knowledge, written from the
-      point of view of someone who has hit it.
+      and what the fix pattern looks like.
     </p>
     <ul class="posts">
-      {posts.map((p) => (
-        <li>
+      {posts.map((p, i) => (
+        <li class="reveal" style={`--i: ${i}`}>
           <time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time>
           <div>
             <h3><a href={`/writing/${p.id}`}>{p.data.title}</a></h3>
@@ -102,22 +100,21 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
     <a class="more" href="/writing">All writing →</a>
   </section>
 
-  <section class="block" id="tooling">
-    <h2>tooling</h2>
+  <section class="block reveal" id="tooling">
+    <h2><span class="num">04</span>tooling</h2>
     <p class="lede">
-      Tools I built for bring-up and debug work. The code belongs to the customers it was written for,
-      so these describe the class of problem, not the implementation.
+      Tools I built for bring-up and debug work, described by the problem each one solved.
     </p>
-    <div class="grid">{tooling.map((p) => <Card p={p} />)}</div>
+    <div class="grid">{tooling.map((p, i) => <Card p={p} i={i} />)}</div>
   </section>
 
-  <section class="block" id="projects">
-    <h2>projects</h2>
-    <div class="grid">{projects.map((p) => <Card p={p} />)}</div>
+  <section class="block reveal" id="projects">
+    <h2><span class="num">05</span>projects</h2>
+    <div class="grid">{projects.map((p, i) => <Card p={p} i={i} />)}</div>
   </section>
 
-  <section class="block contact" id="contact">
-    <h2>get in touch</h2>
+  <section class="block contact reveal" id="contact">
+    <h2><span class="num">06</span>get in touch</h2>
     <p>
       Whether it's a chip that won't boot, a power number that won't drop, or a role where firmware
       meets hardware, I'd like to hear about it.
@@ -127,6 +124,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
 </Base>
 
 <script>
+  // Experience tabs
   const tabs = document.querySelectorAll<HTMLButtonElement>('.xp [role="tab"]');
   const panels = document.querySelectorAll<HTMLElement>('.xp [role="tabpanel"]');
   tabs.forEach((tab) => {
@@ -135,4 +133,23 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
       panels.forEach((p) => { p.hidden = p.id !== tab.getAttribute('aria-controls'); });
     });
   });
+
+  // Typewriter on the headline. Server-rendered text stays for no-JS and crawlers.
+  const h1 = document.querySelector<HTMLElement>('h1.type');
+  if (h1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const full = h1.dataset.text!;
+    const name = h1.dataset.name!;
+    const start = full.indexOf(name), end = start + name.length;
+    const render = (n: number) => {
+      const s = full.slice(0, n);
+      const pre = s.slice(0, Math.min(n, start));
+      const mid = s.slice(start, Math.min(n, end));
+      const post = n > end ? s.slice(end) : '';
+      h1.innerHTML = post ? `${pre}<span class="name">${mid}</span><span class="nw">${post}<span class="cursor"></span></span>` : `${pre}<span class="name nw">${mid}<span class="cursor"></span></span>`;
+    };
+    let n = 0;
+    render(0);
+    const tick = () => { n++; render(n); if (n < full.length) setTimeout(tick, n === start ? 220 : 55 + Math.random() * 40); };
+    setTimeout(tick, 300);
+  }
 </script>

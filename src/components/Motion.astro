@@ -1,0 +1,46 @@
+---
+// Site-wide motion: scroll reveal, card tilt, active nav link.
+---
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Scroll reveal
+  const revealables = document.querySelectorAll<HTMLElement>('.reveal');
+  if (reduce) revealables.forEach((el) => el.classList.add('in'));
+  else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
+    revealables.forEach((el) => io.observe(el));
+    // Safety net: never leave content hidden if the observer is slow or absent.
+    setTimeout(() => revealables.forEach((el) => el.classList.add('in')), 2000);
+  }
+
+  // HUD tilt on cards
+  if (!reduce && window.matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+      card.addEventListener('mousemove', (ev) => {
+        const r = card.getBoundingClientRect();
+        const px = (ev.clientX - r.left) / r.width, py = (ev.clientY - r.top) / r.height;
+        card.style.setProperty('--rx', `${(0.5 - py) * 8}deg`);
+        card.style.setProperty('--ry', `${(px - 0.5) * 10}deg`);
+        card.style.setProperty('--mx', `${px * 100}%`);
+        card.style.setProperty('--my', `${py * 100}%`);
+      });
+      card.addEventListener('mouseleave', () => { card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg'); });
+    });
+  }
+
+  // Active nav link
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.nav ul a[href^="/#"]')];
+  const sections = links.map((a) => document.getElementById(a.getAttribute('href')!.slice(2))).filter(Boolean) as HTMLElement[];
+  if (sections.length) {
+    const nav = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `/#${e.target.id}`));
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    sections.forEach((s) => nav.observe(s));
+  }
+</script>

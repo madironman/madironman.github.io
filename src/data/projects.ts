@@ -74,12 +74,4 @@ export const projects: Project[] = [
     description: 'Working notes from a structured pass over embedded and firmware fundamentals: C, bits, ARM architecture, buses, linkers, RTOS, networking. The pieces that turn into real insight end up in Writing.',
     tech: 'Markdown · C',
   },
-  {
-    name: 'This site',
-    status: 'shipped',
-    statusLabel: 'live',
-    description: 'Static site with an arc-reactor HUD and a live oscilloscope trace drawn on a canvas. No framework on the client, no tracking.',
-    tech: 'Astro · Canvas · GitHub Pages',
-    github: 'https://github.com/madironman/madironman.github.io',
-  },
 ];

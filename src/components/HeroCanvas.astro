@@ -1,36 +1,45 @@
 ---
-// Arc-reactor HUD rings plus a live oscilloscope trace. Pure canvas, no deps.
-// Respects prefers-reduced-motion (draws one static frame) and pauses off-screen.
+// Arc-reactor HUD rings on the right; Fourier epicycles synthesising a square
+// wave along the bottom. Colours come from the theme tokens so light/dark both
+// work. Static frame under reduced-motion, paused off-screen or when hidden.
 ---
 <canvas class="hud" id="hud" aria-hidden="true"></canvas>
+<p class="formula" aria-hidden="true">y(t) = 4/π · Σ<sub>k=1..5</sub> sin((2k−1)ωt) / (2k−1)</p>
 
 <script>
   const canvas = document.getElementById('hud') as HTMLCanvasElement | null;
   if (canvas) {
     const ctx = canvas.getContext('2d')!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const CYAN = (a: number) => `rgba(87, 212, 255, ${a})`;
-    const GOLD = (a: number) => `rgba(224, 176, 74, ${a})`;
+    const HARMONICS = 5;
+
+    let ACC = '255, 74, 74', GOLD = '242, 182, 50', CORE = '160, 228, 255';
+    const readTheme = () => {
+      const s = getComputedStyle(document.documentElement);
+      ACC = s.getPropertyValue('--accent-rgb').trim() || ACC;
+      GOLD = s.getPropertyValue('--gold-rgb').trim() || GOLD;
+      CORE = s.getPropertyValue('--reactor-rgb').trim() || CORE;
+    };
+    const A = (a: number) => `rgba(${ACC}, ${a})`;
+    const G = (a: number) => `rgba(${GOLD}, ${a})`;
+    const C = (a: number) => `rgba(${CORE}, ${a})`;
 
     let w = 0, h = 0, raf = 0, visible = true;
     const t0 = performance.now();
+    const wave: number[] = [];
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = canvas!.clientWidth; h = canvas!.clientHeight;
       canvas!.width = w * dpr; canvas!.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      wave.length = 0;
     }
 
     function ring(cx: number, cy: number, r: number, rot: number, ticks: number, len: number, alpha: number, color: (a: number) => string) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(rot);
-      ctx.strokeStyle = color(alpha);
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+      ctx.strokeStyle = color(alpha); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
       ctx.lineWidth = 1.2;
       for (let i = 0; i < ticks; i++) {
         const a = (i / ticks) * Math.PI * 2;
@@ -44,89 +53,89 @@
     }
 
     function arcs(cx: number, cy: number, r: number, rot: number, segs: number, gap: number, width: number, alpha: number, color: (a: number) => string) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(rot);
-      ctx.strokeStyle = color(alpha);
-      ctx.lineWidth = width;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+      ctx.strokeStyle = color(alpha); ctx.lineWidth = width;
       const span = (Math.PI * 2) / segs;
-      for (let i = 0; i < segs; i++) {
-        ctx.beginPath();
-        ctx.arc(0, 0, r, i * span + gap, (i + 1) * span - gap);
-        ctx.stroke();
-      }
+      for (let i = 0; i < segs; i++) { ctx.beginPath(); ctx.arc(0, 0, r, i * span + gap, (i + 1) * span - gap); ctx.stroke(); }
       ctx.restore();
+    }
+
+    function reactor(t: number) {
+      const wide = w > 760;
+      const cx = wide ? w * 0.77 : w * 0.5;
+      const cy = wide ? h * 0.42 : h * 0.36;
+      const R = Math.min(w, h) * (wide ? 0.32 : 0.4);
+
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.55);
+      core.addColorStop(0, C(0.26)); core.addColorStop(0.45, C(0.07)); core.addColorStop(1, C(0));
+      ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, cy, R * 0.55, 0, Math.PI * 2); ctx.fill();
+
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.6);
+      ctx.fillStyle = C(0.5 + 0.3 * pulse);
+      ctx.beginPath(); ctx.arc(cx, cy, R * 0.06, 0, Math.PI * 2); ctx.fill();
+
+      ring(cx, cy, R, t * 0.08, 90, 6, 0.4, A);
+      arcs(cx, cy, R * 0.86, -t * 0.14, 8, 0.06, 2.5, 0.35, A);
+      ring(cx, cy, R * 0.72, -t * 0.05, 60, 4, 0.3, G);
+      arcs(cx, cy, R * 0.6, t * 0.22, 3, 0.35, 1.5, 0.55, G);
+      arcs(cx, cy, R * 0.42, -t * 0.3, 12, 0.12, 3, 0.4, A);
+      ring(cx, cy, R * 0.28, t * 0.4, 24, 3, 0.35, C);
+    }
+
+    // Fourier synthesis of a square wave: r_n = (4/pi)/n for odd n.
+    function epicycles(t: number) {
+      const amp = Math.min(36, h * 0.05);
+      const baseY = h - amp * 1.9 - 18;
+      const cx = 24 + amp * 1.6;
+      const traceX = cx + amp * 1.6 + 28;
+      const speed = 1.4;
+
+      let x = cx, y = baseY;
+      for (let k = 1; k <= HARMONICS; k++) {
+        const n = 2 * k - 1;
+        const r = (amp * 4) / (Math.PI * n);
+        const ang = n * t * speed;
+        ctx.strokeStyle = G(0.32); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+        const nx = x + r * Math.cos(ang), ny = y + r * Math.sin(ang);
+        ctx.strokeStyle = G(0.6);
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
+        x = nx; y = ny;
+      }
+      ctx.fillStyle = A(0.95); ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+
+      if (!reduce) { wave.unshift(y); if (wave.length > w) wave.length = w; }
+      else if (wave.length === 0) { for (let i = 0; i < w; i++) { let s = 0; for (let k = 1; k <= HARMONICS; k++) { const n = 2 * k - 1; s += Math.sin(n * (t * speed - i * 0.02)) / n; } wave.push(baseY + (amp * 4 / Math.PI) * s); } }
+
+      ctx.setLineDash([3, 5]); ctx.strokeStyle = A(0.4); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(traceX, wave[0] ?? y); ctx.stroke();
+      ctx.setLineDash([]);
+
+      const draw = (width: number, alpha: number) => {
+        ctx.strokeStyle = A(alpha); ctx.lineWidth = width; ctx.beginPath();
+        for (let i = 0; i < wave.length && traceX + i < w; i++) { const px = traceX + i; if (i === 0) ctx.moveTo(px, wave[i]); else ctx.lineTo(px, wave[i]); }
+        ctx.stroke();
+      };
+      draw(4, 0.08); draw(1.3, 0.75);
+
+      ctx.strokeStyle = A(0.08);
+      ctx.beginPath(); ctx.moveTo(traceX, baseY); ctx.lineTo(w, baseY); ctx.stroke();
     }
 
     function draw(now: number) {
       const t = (now - t0) / 1000;
       ctx.clearRect(0, 0, w, h);
-
-      // --- arc reactor, right side ---
-      const wide = w > 760;
-      const cx = wide ? w * 0.76 : w * 0.5;
-      const cy = wide ? h * 0.46 : h * 0.42;
-      const R = Math.min(w, h) * (wide ? 0.34 : 0.42);
-
-      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.55);
-      core.addColorStop(0, CYAN(0.22));
-      core.addColorStop(0.45, CYAN(0.07));
-      core.addColorStop(1, CYAN(0));
-      ctx.fillStyle = core;
-      ctx.beginPath(); ctx.arc(cx, cy, R * 0.55, 0, Math.PI * 2); ctx.fill();
-
-      const pulse = 0.5 + 0.5 * Math.sin(t * 1.6);
-      ctx.fillStyle = CYAN(0.35 + 0.25 * pulse);
-      ctx.beginPath(); ctx.arc(cx, cy, R * 0.06, 0, Math.PI * 2); ctx.fill();
-
-      ring(cx, cy, R, t * 0.08, 90, 6, 0.35, CYAN);
-      arcs(cx, cy, R * 0.86, -t * 0.14, 8, 0.06, 2.5, 0.3, CYAN);
-      ring(cx, cy, R * 0.72, -t * 0.05, 60, 4, 0.22, GOLD);
-      arcs(cx, cy, R * 0.6, t * 0.22, 3, 0.35, 1.5, 0.45, GOLD);
-      arcs(cx, cy, R * 0.42, -t * 0.3, 12, 0.12, 3, 0.35, CYAN);
-
-      // --- oscilloscope traces along the bottom ---
-      const baseY = h * 0.84;
-      const amp = Math.min(40, h * 0.06);
-      const trace = (fn: (x: number) => number, width: number, alpha: number, color: (a: number) => string) => {
-        ctx.strokeStyle = color(alpha);
-        ctx.lineWidth = width;
-        ctx.beginPath();
-        for (let x = 0; x <= w; x += 2) {
-          const y = baseY + fn(x);
-          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      };
-      // analogue channel: two sinusoids plus a slow beat
-      const analogue = (x: number) => {
-        const p = x / w;
-        return amp * (0.6 * Math.sin(p * 18 - t * 2.2) + 0.3 * Math.sin(p * 41 + t * 3.1)) * (0.7 + 0.3 * Math.sin(p * 3 - t * 0.4));
-      };
-      // digital channel: a clock, offset below
-      const digital = (x: number) => {
-        const p = x / w;
-        const bit = Math.floor(p * 24 - t * 3) % 2 === 0 ? -1 : 1;
-        return amp * 1.6 + bit * amp * 0.35;
-      };
-      trace(analogue, 4, 0.08, CYAN);
-      trace(analogue, 1.2, 0.55, CYAN);
-      trace(digital, 1, 0.35, GOLD);
-
-      // faint grid for the scope
-      ctx.strokeStyle = CYAN(0.05);
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= w; x += 80) { ctx.beginPath(); ctx.moveTo(x, baseY - amp * 1.5); ctx.lineTo(x, baseY + amp * 2.2); ctx.stroke(); }
+      reactor(t);
+      epicycles(t);
     }
-
-    function loop(now: number) {
-      draw(now);
-      if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(loop);
-    }
+    function loop(now: number) { draw(now); if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(loop); }
     function start() { cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
 
+    readTheme();
     resize();
     window.addEventListener('resize', () => { resize(); if (reduce) draw(performance.now()); });
+    window.addEventListener('themechange', () => { readTheme(); if (reduce) draw(performance.now()); });
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { readTheme(); if (reduce) draw(performance.now()); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) start(); }).observe(canvas);
     start();
