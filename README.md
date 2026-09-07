@@ -29,7 +29,7 @@ Everything on the site is written under an employer NDA. The rules that keep it 
 - Writing covers public mechanisms: standards, architecture, debugging methods. Not client incidents.
 - Tooling cards describe the class of problem, not the implementation. No code, no repos.
 - Projects are pre-employment or generic study material only.
-- The resume PDF is not hosted here. Send it on request.
+- The resume at `public/resume.pdf` is the NDA-scrubbed version (Resume_6). Never copy an older version over it.
 
 ## Deploy
 
