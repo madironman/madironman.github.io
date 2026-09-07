@@ -8,7 +8,8 @@ import Base from '../layouts/Base.astro';
     <p class="lede">
       Draw a closed shape below. The path is sampled, treated as a sequence of complex numbers, and run through a
       discrete Fourier transform. Every term becomes one rotating circle. Chain the circles tip to tail and they redraw
-      your shape. More circles, closer fit.
+      your shape. Start with a few circles and add more: the grey line is your drawing, the red line is what the
+      circles can manage.
     </p>
 
     <div class="stage">
@@ -17,10 +18,13 @@ import Base from '../layouts/Base.astro';
     </div>
 
     <div class="controls">
-      <label>Circles <span id="terms-out">40</span>
-        <input type="range" id="terms" min="1" max="40" value="40" />
+      <label>Circles <span id="terms-out">5</span>
+        <input type="range" id="terms" min="0" max="100" value="27" />
       </label>
-      <label>Speed <span id="speed-out">1.0×</span>
+      <div class="quick" role="group" aria-label="Quick circle counts">
+        <button type="button" data-n="1">1</button><button type="button" data-n="2">2</button><button type="button" data-n="3">3</button><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button><button type="button" data-n="50">50</button><button type="button" data-n="100">100</button><button type="button" data-n="all">all</button>
+      </div>
+      <label>Speed <span id="speed-out">1×</span>
         <input type="range" id="speed" min="0.25" max="4" step="0.25" value="1" />
       </label>
       <label class="check"><input type="checkbox" id="show-circles" checked /> show circles</label>
@@ -40,6 +44,7 @@ import Base from '../layouts/Base.astro';
         <p class="hud-label">The series</p>
         <p class="eq">f(t) = Σ<sub>k</sub> c<sub>k</sub> · e<sup>ikt</sup>, with c<sub>k</sub> = (1/N) Σ<sub>n</sub> z<sub>n</sub> · e<sup>−ikn·2π/N</sup></p>
         <p class="meta" id="meta">Draw a shape to compute its coefficients.</p>
+        <p class="meta" id="fit"></p>
       </div>
       <div class="terms-box">
         <p class="hud-label">Largest terms</p>
@@ -62,6 +67,12 @@ import Base from '../layouts/Base.astro';
         compression, filtering, and why a square wave needs infinitely many odd harmonics.
       </p>
       <p>
+        Why do the circles vanish so fast? For a smooth drawing the amplitudes fall off roughly as
+        <code>1/k²</code>, so by the twentieth term the circle is smaller than a pixel. Draw something with sharp
+        corners and the fall-off slows to <code>1/k</code>: corners are expensive. That is the same reason a square
+        wave's ringing never quite goes away.
+      </p>
+      <p>
         The hero on the home page is the one-dimensional version of this: five odd harmonics with amplitudes
         <code>4/(πn)</code> summing towards a square wave.
       </p>
@@ -79,9 +90,12 @@ import Base from '../layouts/Base.astro';
   .controls { display: flex; flex-wrap: wrap; gap: 1.2rem 2rem; align-items: end; margin: 1.2rem 0 1.6rem; }
   .controls label { display: flex; flex-direction: column; gap: 0.35rem; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--text-dim); }
   .controls label span { color: var(--accent); margin-left: 0.4rem; }
-  .controls input[type="range"] { width: 180px; accent-color: var(--accent); }
+  .controls input[type="range"] { width: 200px; accent-color: var(--accent); }
   .controls .check { flex-direction: row; align-items: center; gap: 0.5rem; }
   .controls .check input { accent-color: var(--accent); }
+  .quick { display: flex; gap: 0.3rem; align-items: center; }
+  .quick button { all: unset; cursor: pointer; font-family: var(--mono); font-size: 0.74rem; padding: 0.3rem 0.55rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text-dim); }
+  .quick button:hover, .quick button.on { border-color: var(--accent); color: var(--accent); }
   .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .presets .hud-label { font-size: 0.72rem; color: var(--gold); margin-right: 0.3rem; }
   .presets button { all: unset; cursor: pointer; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; padding: 0.4rem 0.8rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text); transition: all 0.15s; }
@@ -92,7 +106,8 @@ import Base from '../layouts/Base.astro';
   .readout .hud-label { font-size: 0.72rem; color: var(--gold); margin: 0 0 0.6rem; }
   .eq { font-family: var(--mono); font-size: 0.92rem; color: var(--head); margin: 0 0 0.6rem; }
   .eq sub, .eq sup { font-size: 0.7em; }
-  .readout .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+  .readout .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); margin: 0 0 0.4rem; }
+  .readout .meta b { color: var(--accent); font-weight: 500; }
   #terms-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.8rem; }
   #terms-table th { text-align: left; font-family: var(--hud); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.68rem; color: var(--text-dim); padding: 0 0.4rem 0.4rem 0; }
   #terms-table td { padding: 0.2rem 0.4rem 0.2rem 0; border-top: 1px solid var(--line); color: var(--text); }
@@ -116,7 +131,9 @@ import Base from '../layouts/Base.astro';
   const speedOut = document.getElementById('speed-out')!;
   const showCircles = document.getElementById('show-circles') as HTMLInputElement;
   const meta = document.getElementById('meta')!;
+  const fit = document.getElementById('fit')!;
   const tbody = document.querySelector('#terms-table tbody')!;
+  const quick = [...document.querySelectorAll<HTMLButtonElement>('.quick button')];
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const SAMPLES = 400;
@@ -136,6 +153,20 @@ import Base from '../layouts/Base.astro';
     TEXT = s.getPropertyValue('color-scheme').trim() === 'light' ? '44, 35, 32' : '226, 217, 211';
   };
 
+  // The slider runs 0..100 and maps logarithmically onto 1..N, so the low
+  // counts where the fit is visibly rough get real travel.
+  let exactN: number | null = null; // set by the quick buttons, cleared by the slider
+  const termsInUse = () => {
+    const N = Math.max(1, coeffs.length);
+    if (exactN !== null) return Math.max(1, Math.min(N, exactN));
+    const v = Number(termsIn.value) / 100;
+    return Math.max(1, Math.min(N, Math.round(Math.exp(Math.log(N) * v))));
+  };
+  const sliderFor = (n: number) => {
+    const N = Math.max(2, coeffs.length);
+    return Math.round((Math.log(Math.max(1, n)) / Math.log(N)) * 100);
+  };
+
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = canvas.clientWidth; h = canvas.clientHeight;
@@ -143,7 +174,7 @@ import Base from '../layouts/Base.astro';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  // Resample a polyline to N points evenly spaced by arc length, closing the loop.
+  // Resample a polyline to n points evenly spaced by arc length, closing the loop.
   function resample(pts: Cx[], n: number): Cx[] {
     const closed = [...pts, pts[0]];
     const seg: number[] = [];
@@ -182,18 +213,44 @@ import Base from '../layouts/Base.astro';
     return `${Math.abs(k)}× per lap, ${k > 0 ? 'anticlockwise' : 'clockwise'}`;
   }
 
+  // RMS distance between the n-term reconstruction and the sampled path.
+  function fitError(n: number) {
+    const N = path.length; let acc = 0;
+    for (let m = 0; m < N; m++) {
+      const tt = (2 * Math.PI * m) / N; let x = 0, y = 0;
+      for (let i = 0; i < n; i++) { const c = coeffs[i]; const a = c.k * tt + c.phase; x += c.amp * Math.cos(a); y += c.amp * Math.sin(a); }
+      acc += (x - path[m].re) ** 2 + (y - path[m].im) ** 2;
+    }
+    return Math.sqrt(acc / N);
+  }
+
+  function updateReadout() {
+    if (!coeffs.length) return;
+    const n = termsInUse();
+    termsOut.textContent = String(n);
+    const fmt = (x: number) => (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1));
+    const c0 = coeffs.find((c) => c.k === 0)!;
+    const tiny = coeffs.slice(0, n).filter((c) => c.amp < 1).length;
+    meta.innerHTML = `${path.length} samples · ${coeffs.length} coefficients · <b>${n} circle${n === 1 ? '' : 's'} in use</b>` +
+      (tiny ? ` (${tiny} of them under 1 px, stacked at the tip)` : '') + ` · c₀ = (${fmt(c0.re)}, ${fmt(c0.im)})`;
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    path.forEach((p) => { minX = Math.min(minX, p.re); maxX = Math.max(maxX, p.re); minY = Math.min(minY, p.im); maxY = Math.max(maxY, p.im); });
+    const size = Math.hypot(maxX - minX, maxY - minY) || 1;
+    const err = fitError(n);
+    fit.innerHTML = `fit error: <b>${err.toFixed(1)} px RMS</b> (${((err / size) * 100).toFixed(1)}% of the shape size). Add circles and watch it fall.`;
+    quick.forEach((b) => b.classList.toggle('on', b.dataset.n === String(n) || (b.dataset.n === 'all' && n === coeffs.length)));
+  }
+
   function commit(pts: Cx[]) {
     if (pts.length < 8) return;
     path = resample(pts, SAMPLES);
     coeffs = dft(path);
     trace = []; t = 0;
-    termsIn.max = String(path.length);
-    const def = Math.min(40, path.length);
-    termsIn.value = String(def); termsOut.textContent = String(def);
+    exactN = Math.min(5, coeffs.length);
+    termsIn.value = String(sliderFor(exactN));
     hint.classList.add('off');
-    const fmt = (x: number) => (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1));
-    meta.textContent = `${path.length} samples · ${coeffs.length} coefficients · ${def} circles in use · c₀ = (${fmt(coeffs.find(c => c.k === 0)!.re)}, ${fmt(coeffs.find(c => c.k === 0)!.im)})`;
     tbody.innerHTML = coeffs.slice(0, 8).map(c => `<tr><td class="k">${c.k}</td><td>${c.amp.toFixed(1)} px</td><td>${((c.phase * 180) / Math.PI).toFixed(0)}°</td><td class="role">${role(c.k)}</td></tr>`).join('');
+    updateReadout();
     start();
   }
 
@@ -201,11 +258,10 @@ import Base from '../layouts/Base.astro';
     ctx.clearRect(0, 0, w, h);
     const cx = w / 2, cy = h / 2;
 
-    // faint original path
+    // the drawing itself, solid and dim, so the fit can be judged against it
     if (path.length) {
-      ctx.strokeStyle = `rgba(${TEXT}, 0.18)`; ctx.lineWidth = 1; ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = `rgba(${TEXT}, 0.35)`; ctx.lineWidth = 1.5;
       ctx.beginPath(); path.forEach((p, i) => (i ? ctx.lineTo(cx + p.re, cy + p.im) : ctx.moveTo(cx + p.re, cy + p.im))); ctx.closePath(); ctx.stroke();
-      ctx.setLineDash([]);
     }
     // live stroke while drawing
     if (drawing && raw.length > 1) {
@@ -215,16 +271,17 @@ import Base from '../layouts/Base.astro';
     }
     if (!coeffs.length) return;
 
-    const n = Math.min(Number(termsIn.value), coeffs.length);
+    const n = termsInUse();
     let x = cx, y = cy;
     const circles = showCircles.checked;
     for (let i = 0; i < n; i++) {
       const c = coeffs[i];
       const ang = c.k * t + c.phase;
       const nx = x + c.amp * Math.cos(ang), ny = y + c.amp * Math.sin(ang);
-      if (circles && c.amp > 0.6) {
-        ctx.strokeStyle = `rgba(${GOLD}, 0.32)`; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(x, y, c.amp, 0, Math.PI * 2); ctx.stroke();
+      if (circles) {
+        // every circle in use is drawn, however small
+        ctx.strokeStyle = `rgba(${GOLD}, ${c.amp < 1 ? 0.6 : 0.32})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, Math.max(c.amp, 0.4), 0, Math.PI * 2); ctx.stroke();
         ctx.strokeStyle = `rgba(${GOLD}, 0.7)`;
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
       }
@@ -264,9 +321,10 @@ import Base from '../layouts/Base.astro';
     reactor: (s) => { const out: Cx[] = []; for (let i = 0; i < 120; i++) { const a = (i / 120) * Math.PI * 2; out.push({ re: s * 16 * Math.cos(a), im: s * 16 * Math.sin(a) }); } for (let i = 0; i <= 3; i++) { const a = (i / 3) * Math.PI * 2 - Math.PI / 2; out.push({ re: s * 9 * Math.cos(a), im: s * 9 * Math.sin(a) }); } out.push({ re: s * 16, im: 0 }); return out; },
   };
   document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) => b.addEventListener('click', () => { const s = Math.min(w, h) / 44; commit(presets[b.dataset.preset!](s)); }));
-  document.getElementById('clear')!.addEventListener('click', () => { raw = []; path = []; coeffs = []; trace = []; tbody.innerHTML = ''; meta.textContent = 'Draw a shape to compute its coefficients.'; hint.classList.remove('off'); ctx.clearRect(0, 0, w, h); });
+  document.getElementById('clear')!.addEventListener('click', () => { raw = []; path = []; coeffs = []; trace = []; tbody.innerHTML = ''; meta.textContent = 'Draw a shape to compute its coefficients.'; fit.textContent = ''; quick.forEach((b) => b.classList.remove('on')); hint.classList.remove('off'); ctx.clearRect(0, 0, w, h); });
 
-  termsIn.addEventListener('input', () => { termsOut.textContent = termsIn.value; trace = []; if (coeffs.length) meta.textContent = meta.textContent.replace(/\d+ circles in use/, `${termsIn.value} circles in use`); });
+  termsIn.addEventListener('input', () => { exactN = null; trace = []; updateReadout(); });
+  quick.forEach((b) => b.addEventListener('click', () => { if (!coeffs.length) return; const n = b.dataset.n === 'all' ? coeffs.length : Number(b.dataset.n); exactN = n; termsIn.value = String(sliderFor(n)); trace = []; updateReadout(); }));
   speedIn.addEventListener('input', () => { speedOut.textContent = `${Number(speedIn.value).toFixed(2).replace(/\.?0+$/, '')}×`; });
 
   readTheme(); resize();
