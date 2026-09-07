@@ -1,0 +1,11 @@
+/* TEAM */
+  Engineer, writer, and the only person who touched this: P. R. Madhevan
+  Site: https://madironman.github.io
+  GitHub: @madironman
+  Location: Chennai, India
+
+/* SITE */
+  Built with: Astro, one <canvas>, and a Fourier series
+  Fonts: Syne, Rajdhani, IBM Plex Sans, IBM Plex Mono
+  Hosting: GitHub Pages
+  Tracking: none

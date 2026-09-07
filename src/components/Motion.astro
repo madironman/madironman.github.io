@@ -1,10 +1,11 @@
 ---
-// Site-wide motion: scroll reveal, card tilt, active nav link.
+// Site-wide behaviour: scroll reveal, card tilt, active nav link, scroll
+// progress, mobile menu, expandable lists. No dependencies.
 ---
 <script>
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Scroll reveal
+  // Scroll reveal, with a safety net so content can never stay hidden.
   const revealables = document.querySelectorAll<HTMLElement>('.reveal');
   if (reduce) revealables.forEach((el) => el.classList.add('in'));
   else {
@@ -12,11 +13,10 @@
       entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
     revealables.forEach((el) => io.observe(el));
-    // Safety net: never leave content hidden if the observer is slow or absent.
     setTimeout(() => revealables.forEach((el) => el.classList.add('in')), 2000);
   }
 
-  // HUD tilt on cards
+  // HUD tilt on cards (pointer devices only)
   if (!reduce && window.matchMedia('(hover: hover)').matches) {
     document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
       card.addEventListener('mousemove', (ev) => {
@@ -43,4 +43,37 @@
     }, { rootMargin: '-40% 0px -55% 0px' });
     sections.forEach((s) => nav.observe(s));
   }
+
+  // Scroll progress
+  const bar = document.getElementById('progress');
+  if (bar) {
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+  }
+
+  // Mobile menu
+  const menuBtn = document.getElementById('menu-toggle');
+  const menu = document.getElementById('nav-menu');
+  if (menuBtn && menu) {
+    const set = (open: boolean) => { menu.classList.toggle('open', open); menuBtn.setAttribute('aria-expanded', String(open)); menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu'); };
+    menuBtn.addEventListener('click', () => set(!menu.classList.contains('open')));
+    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => set(false)));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
+  }
+
+  // Expandable lists: [data-expand] buttons reveal siblings marked .more-item
+  document.querySelectorAll<HTMLButtonElement>('[data-expand]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const list = document.getElementById(btn.dataset.expand!);
+      if (!list) return;
+      const open = list.classList.toggle('expanded');
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Show fewer' : btn.dataset.label || 'Show more';
+    });
+  });
 </script>

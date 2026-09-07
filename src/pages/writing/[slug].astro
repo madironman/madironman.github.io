@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import { site } from '../../data/site';
 
 export async function getStaticPaths() {
   const posts = await getCollection('writing', ({ data }) => !data.draft);
@@ -13,13 +14,16 @@ const words = (post.body ?? '').split(/\s+/).length;
 const minutes = Math.max(1, Math.round(words / 220));
 const date = post.data.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
-<Base title={post.data.title} description={post.data.summary}>
+<Base title={post.data.title} description={post.data.summary} type="article" publishedTime={post.data.date} tags={post.data.tags} imageAlt={`${post.data.title}, by ${site.fullName}`}>
   <article class="article">
     <a class="back" href="/writing">← All writing</a>
     <header>
       <h1>{post.data.title}</h1>
-      <p class="meta">{date} · {minutes} min read · <span class="tags">{post.data.tags.map((t) => `#${t}`).join('  ')}</span></p>
+      <p class="meta"><time datetime={post.data.date.toISOString()}>{date}</time> · {minutes} min read · <span class="tags">{post.data.tags.map((t) => `#${t}`).join('  ')}</span></p>
     </header>
     <div class="body"><Content /></div>
+    <footer class="article-end">
+      <p>Written by <a href="/">{site.fullName}</a>, firmware and SoC systems engineer. Found a mistake or want to argue about it? <a href={`mailto:${site.email}?subject=${encodeURIComponent('Re: ' + post.data.title)}`}>Email me</a>.</p>
+    </footer>
   </article>
 </Base>

@@ -3,13 +3,17 @@ import Base from '../layouts/Base.astro';
 import Card from '../components/Card.astro';
 import HeroCanvas from '../components/HeroCanvas.astro';
 import { getCollection } from 'astro:content';
-import { jobs } from '../data/experience';
+import { jobs, stats, recognition, principles, askMe } from '../data/experience';
 import { tooling, projects } from '../data/projects';
+import { site } from '../data/site';
 
 const posts = (await getCollection('writing', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 4);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const md = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+const VISIBLE = 4;
 ---
 <Base>
   <section class="hero">
@@ -22,9 +26,19 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
         <b>Wi-Fi chips</b>, <b>low-power architecture</b> and <b>pre-silicon bring-up</b>.
         Six years of tracing defects through RTL and waveforms, then writing the Cortex-R and Cortex-M code that works around them.
       </p>
-      <a class="btn" href="mailto:madhevan1998@gmail.com">Say hi</a>
-      <a class="btn gold" href="https://www.linkedin.com/in/madhevan-ramalingam-4934ab32a/" target="_blank" rel="noopener">LinkedIn</a>
+      <p class="status-line"><span class="dot"></span>Open to conversations about senior firmware and SoC roles · Chennai · IST</p>
+      <a class="btn" href={`mailto:${site.email}`}>Email me</a>
+      <a class="btn gold" href={site.linkedin} target="_blank" rel="noopener">LinkedIn</a>
     </div>
+  </section>
+
+  <section class="stats reveal" aria-label="At a glance">
+    {stats.map((s) => (
+      <div class={`stat${s.highlight ? ' hi' : ''}`}>
+        <span class="value">{s.value}</span>
+        <span class="label">{s.label}</span>
+      </div>
+    ))}
   </section>
 
   <section class="block reveal" id="about">
@@ -61,8 +75,21 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
     </div>
   </section>
 
+  <section class="block reveal" id="principles">
+    <h2><span class="num">02</span>how I work</h2>
+    <div class="principles">
+      {principles.map((p, i) => (
+        <div class="principle reveal" style={`--i: ${i}`}>
+          <span class="idx">{String(i + 1).padStart(2, '0')}</span>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
   <section class="block reveal" id="experience">
-    <h2><span class="num">02</span>experience</h2>
+    <h2><span class="num">03</span>experience</h2>
     <div class="xp">
       <div class="tabs" role="tablist" aria-label="Engagements">
         {jobs.map((j, i) => (
@@ -73,14 +100,25 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
         <div class="panel" role="tabpanel" id={`panel-${j.id}`} aria-labelledby={`tab-${j.id}`} hidden={i !== 0}>
           <h3>{j.title}</h3>
           <p class="meta">{j.period} · {j.client}</p>
-          <ul>{j.bullets.map((b) => <li>{b}</li>)}</ul>
+          <ul id={`list-${j.id}`}>
+            {j.bullets.map((b, k) => <li class={k >= VISIBLE ? 'more-item' : ''} set:html={md(b)} />)}
+          </ul>
+          {j.bullets.length > VISIBLE && (
+            <button class="expand" type="button" data-expand={`list-${j.id}`} data-label={`Show ${j.bullets.length - VISIBLE} more`} aria-expanded="false">Show {j.bullets.length - VISIBLE} more</button>
+          )}
         </div>
       ))}
     </div>
   </section>
 
+  <section class="marquee reveal" aria-label="Recognition">
+    <div class="track">
+      {[...recognition, ...recognition].map((r) => <span class="item"><span class="star">✦</span>{r}</span>)}
+    </div>
+  </section>
+
   <section class="block reveal" id="writing">
-    <h2><span class="num">03</span>writing</h2>
+    <h2><span class="num">04</span>writing</h2>
     <p class="lede">
       Notes on mechanisms that firmware engineers keep meeting: how things work, why they fail,
       and what the fix pattern looks like.
@@ -101,7 +139,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
   </section>
 
   <section class="block reveal" id="tooling">
-    <h2><span class="num">04</span>tooling</h2>
+    <h2><span class="num">05</span>tooling</h2>
     <p class="lede">
       Tools I built for bring-up and debug work, described by the problem each one solved.
     </p>
@@ -109,17 +147,18 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
   </section>
 
   <section class="block reveal" id="projects">
-    <h2><span class="num">05</span>projects</h2>
+    <h2><span class="num">06</span>projects</h2>
     <div class="grid">{projects.map((p, i) => <Card p={p} i={i} />)}</div>
   </section>
 
   <section class="block contact reveal" id="contact">
-    <h2><span class="num">06</span>get in touch</h2>
+    <h2><span class="num">07</span>let's build something that boots</h2>
     <p>
-      Whether it's a chip that won't boot, a power number that won't drop, or a role where firmware
-      meets hardware, I'd like to hear about it.
+      Hiring for firmware, SoC or wireless work? Email is fastest. I read everything and reply within two days.
     </p>
-    <a class="btn" href="mailto:madhevan1998@gmail.com">Say hi</a>
+    <a class="btn" href={`mailto:${site.email}?subject=Hello%20from%20your%20site`}>Email {site.email}</a>
+    <a class="btn gold" href={site.linkedin} target="_blank" rel="noopener">LinkedIn</a>
+    <p class="askme"><span class="hud-label">Ask me about</span>{askMe.map((a) => <span class="chip">{a}</span>)}</p>
   </section>
 </Base>
 
@@ -127,10 +166,18 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '
   // Experience tabs
   const tabs = document.querySelectorAll<HTMLButtonElement>('.xp [role="tab"]');
   const panels = document.querySelectorAll<HTMLElement>('.xp [role="tabpanel"]');
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
+  tabs.forEach((tab, i) => {
+    const activate = () => {
       tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
       panels.forEach((p) => { p.hidden = p.id !== tab.getAttribute('aria-controls'); });
+    };
+    tab.addEventListener('click', activate);
+    tab.addEventListener('keydown', (e) => {
+      const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      const next = tabs[(i + dir + tabs.length) % tabs.length];
+      next.focus(); next.click();
     });
   });
 

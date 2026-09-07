@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="404" description="Page not found." noindex>
+  <section class="block notfound">
+    <p class="eyebrow">HardFault · 0x404</p>
+    <h1>Nothing at this address.</h1>
+    <p class="lede">
+      Either the page moved, or something dereferenced a pointer it shouldn't have.
+      The stack unwinder suggests going home.
+    </p>
+    <a class="btn" href="/">Back to reset vector</a>
+    <a class="btn gold" href="/writing">Read something instead</a>
+  </section>
+</Base>
