@@ -34,8 +34,8 @@ const imageUrl = new URL(image, site.url).href;
 const person = {
   '@type': 'Person',
   '@id': `${site.url}/#person`,
-  name: site.fullName,
-  alternateName: [site.legalName, site.handle],
+  name: site.legalName,
+  alternateName: [site.fullName, site.handle],
   givenName: 'Madhevan',
   jobTitle: site.title,
   description: site.description,
