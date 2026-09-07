@@ -63,8 +63,8 @@ export const projects: Project[] = [
   {
     name: 'Mobile comms over TV White Space',
     status: 'past',
-    statusLabel: 'final-year project · 2020',
-    description: 'Drove transmit and receive directly from Raspberry Pi GPIO pins instead of a dedicated RF transceiver, with Reed-Solomon forward error correction and POCSAG signalling.',
+    statusLabel: 'Ericsson-sponsored internship · 2020',
+    description: 'Final-year project done as an internship with Ericsson. Drove transmit and receive directly from Raspberry Pi GPIO pins instead of a dedicated RF transceiver, with Reed-Solomon forward error correction and POCSAG signalling.',
     tech: 'Raspberry Pi · GPIO bit-bang · Reed-Solomon · POCSAG',
   },
   {
