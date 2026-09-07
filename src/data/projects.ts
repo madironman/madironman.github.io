@@ -68,6 +68,14 @@ export const projects: Project[] = [
     tech: 'Raspberry Pi · GPIO bit-bang · Reed-Solomon · POCSAG',
   },
   {
+    name: 'Fourier lab',
+    status: 'shipped',
+    statusLabel: 'live · interactive',
+    description: 'Draw any closed shape and watch it decomposed into a Fourier series, then redrawn by a chain of rotating circles. Adjustable term count, phase and amplitude readout, five presets. No libraries.',
+    tech: 'TypeScript · Canvas · DFT',
+    link: '/fourier',
+  },
+  {
     name: 'Firmware interview notes',
     status: 'wip',
     statusLabel: 'in progress',
