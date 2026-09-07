@@ -25,11 +25,11 @@ Set `draft: true` to keep it out of the build.
 
 Everything on the site is written under an employer NDA. The rules that keep it safe:
 
-- Experience describes the kind of work and the skills used. No customer part numbers, platform code names, defect specifics, roadmap items or internal metrics.
+- Experience mirrors the signed-off resume: client names and the resume bullets, paraphrased. No customer part numbers, platform code names or defect specifics beyond what the resume itself says.
 - Writing covers public mechanisms: standards, architecture, debugging methods. Not client incidents.
 - Tooling cards describe the class of problem, not the implementation. No code, no repos.
 - Projects are pre-employment or generic study material only.
-- The resume at `public/resume.pdf` is the NDA-scrubbed version (Resume_7). Never copy an older version over it.
+- The resume at `public/Madhevan_Ramalingam_Resume.pdf` is the version the user signed off (Resume_9). Replace it only with a newer signed-off version.
 
 ## Deploy
 

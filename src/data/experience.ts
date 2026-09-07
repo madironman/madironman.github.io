@@ -16,19 +16,19 @@ export const jobs: Job[] = [
   {
     id: 'now',
     tab: 'Current',
-    title: 'Technical Lead, WLAN host software',
-    client: 'embedUR Systems · semiconductor customer',
+    title: 'Windows WLAN Driver',
+    client: 'embedUR Systems · client: Infineon',
     period: 'Jul 2026 – present',
     bullets: [
-      '**Driver-side tooling.** Building the applications and control utility for a Windows WLAN driver.',
-      '**Technical lead.** Design reviews, debug escalations and mentoring for the engagement.',
+      '**Driver-side tooling.** Building the DHD-based driver applications and control utility for a Windows WLAN driver.',
+      '**Wi-Fi ranging.** Evaluating distributed real-time location over Wi-Fi NAN ranging and FTM / RTT: DS-TWR against SS-TWR, leading-edge detection and EKF innovation gating.',
     ],
   },
   {
     id: 'wlan-soc',
     tab: 'WLAN SoC',
     title: 'WLAN Firmware & SoC Bring-up',
-    client: 'embedUR Systems · Wi-Fi silicon customer · Engineer → Senior → Technical Lead',
+    client: 'embedUR Systems · client: Synaptics · Engineer → Senior → Technical Lead',
     period: 'Jun 2022 – Jul 2026',
     bullets: [
       '**Low-power architecture.** Designed the sleep protocol between an application MCU and a WLAN core on a dual-core Wi-Fi SoC, covering retention and standby modes with no packet loss. Cortex-R and Cortex-M firmware over an on-die AXI link.',
@@ -45,7 +45,7 @@ export const jobs: Job[] = [
     id: 'linux',
     tab: 'Embedded Linux',
     title: 'Embedded Linux & Industrial Switching',
-    client: 'embedUR Systems · industrial networking customer',
+    client: 'embedUR Systems · client: Hirschmann (Belden)',
     period: 'May 2021 – Jun 2022',
     bullets: [
       '**Boot time.** Cut switch boot time by roughly four times during a VxWorks-to-Linux migration by tracing a retry loop in hardware discovery and parallelising module initialisation over IPC.',
@@ -57,7 +57,7 @@ export const jobs: Job[] = [
     id: 'docsis',
     tab: 'Cable modem',
     title: 'Cable Modem Firmware & Lab Provisioning',
-    client: 'embedUR Systems · broadband equipment customer',
+    client: 'embedUR Systems · client: CommScope (ARRIS)',
     period: 'May 2020 – May 2021',
     bullets: [
       '**DOCSIS debugging.** Signal, DHCP, Green Ethernet and connectivity defects on residential gateways across SNMP and CLI backends. RDK-B, Yocto.',

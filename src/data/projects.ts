@@ -61,11 +61,11 @@ export const tooling: Project[] = [
 // material with no connection to customer products.
 export const projects: Project[] = [
   {
-    name: 'Mobile comms over TV White Space',
+    name: 'TV white space for mobile communication',
     status: 'past',
-    statusLabel: 'Ericsson-sponsored internship · 2020',
-    description: 'Final-year project done as an internship with Ericsson. Drove transmit and receive directly from Raspberry Pi GPIO pins instead of a dedicated RF transceiver, with Reed-Solomon forward error correction and POCSAG signalling.',
-    tech: 'Raspberry Pi · GPIO bit-bang · Reed-Solomon · POCSAG',
+    statusLabel: 'Ericsson Research India internship · Dec 2019 – Mar 2020',
+    description: 'Final-year thesis: television white space for mobile communication in rural and hilly terrain. Drove transmit and receive directly from Raspberry Pi GPIO pins instead of dedicated RF transceiver chips.',
+    tech: 'Raspberry Pi · GPIO bit-bang · TV white space',
   },
   {
     name: 'Fourier lab',
