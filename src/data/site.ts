@@ -13,7 +13,7 @@ export const site = {
   location: { city: 'Chennai', region: 'Tamil Nadu', country: 'IN', tz: 'Asia/Kolkata' },
   employer: 'embedUR Systems',
   github: 'https://github.com/madironman',
-  linkedin: 'https://www.linkedin.com/in/madhevan-ramalingam-4934ab32a/',
+  linkedin: 'https://www.linkedin.com/in/madhevan-ramalingam/',
   ogImage: '/og.png',
   keywords: [
     'firmware engineer', 'SoC engineer', 'embedded systems', '802.11', 'Wi-Fi firmware', 'WLAN',
