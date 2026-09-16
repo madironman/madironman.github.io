@@ -259,9 +259,9 @@ section.block h2, section.block > h1 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); 
 .posts li { display: grid; grid-template-columns: 110px 1fr; gap: 1.5rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line); }
 .posts li:first-child { border-top: 1px solid var(--line); }
 .posts time { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); padding-top: 0.35rem; }
-.posts h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
-.posts h3 a { color: var(--head); }
-.posts h3 a:hover { color: var(--accent); text-decoration: none; }
+.posts h3, .posts h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+.posts h3 a, .posts h2 a { color: var(--head); }
+.posts h3 a:hover, .posts h2 a:hover { color: var(--accent); text-decoration: none; }
 .posts p { color: var(--text-dim); margin: 0 0 0.4rem; }
 .tags { color: var(--gold); }
 .tags span { margin-right: 0.8rem; }

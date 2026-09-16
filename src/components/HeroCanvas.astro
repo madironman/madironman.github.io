@@ -17,6 +17,8 @@
     const ctx = canvas.getContext('2d')!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fine = window.matchMedia('(pointer: fine)').matches;
+    const coarse = !fine;                       // phones and tablets: half the frame rate, no trails
+    const FRAME = coarse ? 33 : 0;
     const tSnr = document.getElementById('t-snr')!, tEvm = document.getElementById('t-evm')!, tCfo = document.getElementById('t-cfo')!, tLock = document.getElementById('t-lock')!, tHarm = document.getElementById('t-harm')!;
 
     let ACC = '255, 74, 74', GOLD = '242, 182, 50', CORE = '160, 228, 255', LIGHT = false;
@@ -127,7 +129,7 @@
         const nI = gauss() * sigma, nQ = gauss() * sigma;
         mI += nI; mQ += nQ;
         const x = cx + rx + nI * sp, y = cy + ry + nQ * sp;
-        if (!reduce && Math.random() < 0.35) trails.push({ x, y, a: 1 });
+        if (!reduce && !coarse && Math.random() < 0.35) trails.push({ x, y, a: 1 });
         ctx.fillStyle = locked ? A(0.95) : G(0.9);
         ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
       }
@@ -213,7 +215,8 @@
         tHarm.textContent = String(harm);
       }
     }
-    function loop(now: number) { draw(now); if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(loop); }
+    let lastFrame = 0;
+    function loop(now: number) { if (now - lastFrame >= FRAME) { lastFrame = now; draw(now); } if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(loop); }
     function start() { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop); }
 
     readTheme();
@@ -223,6 +226,8 @@
     window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { readTheme(); if (reduce) draw(performance.now()); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) start(); }).observe(canvas);
-    start();
+    // let the page paint and settle before the instruments start drawing
+    const boot = () => ((window as any).requestIdleCallback ? (window as any).requestIdleCallback(start, { timeout: 1200 }) : setTimeout(start, 300));
+    if (document.readyState === 'complete') boot(); else window.addEventListener('load', boot, { once: true });
   }
 </script>

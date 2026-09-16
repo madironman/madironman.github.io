@@ -6,7 +6,7 @@ const posts = (await getCollection('writing', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 ---
-<Base title="Writing" description="Debug stories and notes from WLAN firmware and SoC bring-up.">
+<Base title="Writing" description="Notes on the mechanisms firmware engineers keep meeting: clock-domain crossings, Cortex-M boot, 802.11 power save, stall diagnosis. How things work, why they fail, and the fix pattern.">
   <section class="block">
     <h1>Writing</h1>
     <p class="lede">
@@ -19,7 +19,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
         <li>
           <time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time>
           <div>
-            <h3><a href={`/writing/${p.id}`}>{p.data.title}</a></h3>
+            <h2><a href={`/writing/${p.id}`}>{p.data.title}</a></h2>
             <p>{p.data.summary}</p>
             <div class="tags">{p.data.tags.map((t) => <span>#{t}</span>)}</div>
           </div>
