@@ -125,16 +125,16 @@ const VISIBLE = 4;
           party. The site's theme is not a coincidence.
         </p>
       </div>
-      <ul class="stack">
+      <div class="stack">
         <h3>Languages</h3>
-        <li>C</li><li>ARM assembly</li><li>Python</li><li>TCL / Bash</li>
+        <ul><li>C</li><li>ARM assembly</li><li>Python</li><li>TCL / Bash</li></ul>
         <h3>Firmware</h3>
-        <li>FreeRTOS</li><li>Bare-metal bring-up</li><li>Linux kernel drivers</li><li>Secure boot</li>
+        <ul><li>FreeRTOS</li><li>Bare-metal bring-up</li><li>Linux kernel drivers</li><li>Secure boot</li></ul>
         <h3>Silicon</h3>
-        <li>AXI / AHB / APB</li><li>PCIe / SDIO</li><li>PMU &amp; clock domains</li><li>DMA engines</li>
+        <ul><li>AXI / AHB / APB</li><li>PCIe / SDIO</li><li>PMU &amp; clock domains</li><li>DMA engines</li></ul>
         <h3>Debug</h3>
-        <li>JTAG / ADIv5</li><li>OpenOCD / GDB</li><li>Lauterbach TRACE32</li><li>Emulation / FPGA</li>
-      </ul>
+        <ul><li>JTAG / ADIv5</li><li>OpenOCD / GDB</li><li>Lauterbach TRACE32</li><li>Emulation / FPGA</li></ul>
+      </div>
     </div>
     <ul class="principles" aria-label="How I work">
       {principles.map((p) => <li><b>{p.title}</b><span>{p.body}</span></li>)}
@@ -154,7 +154,6 @@ const VISIBLE = 4;
     </div>
     <p class="askme"><span class="hud-label">Ask me about</span>{askMe.map((a) => <span class="chip">{a}</span>)}</p>
   </section>
-</Base>
 
 <script>
   // Experience tabs
@@ -207,3 +206,5 @@ const VISIBLE = 4;
     h1.querySelector('.cursor')?.classList.add('done');
   }
 </script>
+</Base>
+

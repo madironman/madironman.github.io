@@ -193,7 +193,7 @@ main:focus { outline: none; }
 
 /* ---- sections ---- */
 section.block { padding: var(--section) 0; }
-section.block h2 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); font-weight: 800; margin-bottom: 1.6rem; }
+section.block h2, section.block > h1 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); font-weight: 800; margin-bottom: 1.6rem; }
 .lede { color: var(--text-dim); max-width: 640px; margin: -0.8rem 0 1.6rem; font-size: 1.02rem; }
 
 /* ---- stats strip ---- */
@@ -207,7 +207,8 @@ section.block h2 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); font-weight: 800; ma
 
 /* ---- about ---- */
 .about { display: grid; grid-template-columns: 1.6fr 1fr; gap: 3rem; align-items: start; }
-.about .stack { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1rem; font-family: var(--mono); font-size: 0.8rem; }
+.about .stack { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1rem; font-family: var(--mono); font-size: 0.8rem; }
+.about .stack ul { display: contents; list-style: none; padding: 0; margin: 0; }
 .about .stack li::before { content: "▸ "; color: var(--text-dim); }
 .about .stack h3 { grid-column: 1 / -1; font-family: var(--hud); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--gold); margin: 1rem 0 0.3rem; }
 .about .stack h3:first-child { margin-top: 0; }
