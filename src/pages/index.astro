@@ -175,28 +175,32 @@ const VISIBLE = 4;
     });
   });
 
-  // Typewriter on the headline. Server-rendered text stays for no-JS and crawlers.
-  // The cursor stops blinking and fades once the line is complete.
+  // Typewriter on the headline. The full text is laid out from the start and
+  // characters are revealed by visibility, so nothing below the headline moves.
   const h1 = document.querySelector<HTMLElement>('h1.type');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (h1 && !reduce) {
-    const full = h1.dataset.text!;
-    const name = h1.dataset.name!;
-    const start = full.indexOf(name), end = start + name.length;
-    const render = (n: number, done = false) => {
-      const s = full.slice(0, n);
-      const pre = s.slice(0, Math.min(n, start));
-      const mid = s.slice(start, Math.min(n, end));
-      const post = n > end ? s.slice(end) : '';
-      const cur = `<span class="cursor${done ? ' done' : ''}"></span>`;
-      h1.innerHTML = post ? `${pre}<span class="name">${mid}</span><span class="nw">${post}${cur}</span>` : `${pre}<span class="name nw">${mid}${cur}</span>`;
+    const wrap = (node: Node, out: HTMLElement[]) => {
+      [...node.childNodes].forEach((n) => {
+        if (n.nodeType === Node.TEXT_NODE) {
+          const frag = document.createDocumentFragment();
+          for (const ch of n.textContent || '') { const sp = document.createElement('span'); sp.textContent = ch; sp.className = 'ch'; sp.style.visibility = 'hidden'; frag.appendChild(sp); out.push(sp); }
+          n.replaceWith(frag);
+        } else if (n instanceof HTMLElement && !n.classList.contains('cursor')) wrap(n, out);
+      });
     };
+    const chars: HTMLElement[] = [];
+    wrap(h1, chars);
+    const cursor = h1.querySelector<HTMLElement>('.cursor');
+    if (cursor && chars[0]) chars[0].insertAdjacentElement('beforebegin', cursor);
+    const nameStart = chars.findIndex((c) => c.parentElement?.classList.contains('name'));
     let n = 0;
-    render(0);
     const tick = () => {
-      n++; render(n);
-      if (n < full.length) setTimeout(tick, n === start ? 220 : 55 + Math.random() * 40);
-      else setTimeout(() => render(n, true), 1800);
+      chars[n].style.visibility = 'visible';
+      if (cursor) chars[n].insertAdjacentElement('afterend', cursor);
+      n++;
+      if (n < chars.length) setTimeout(tick, n === nameStart ? 220 : 55 + Math.random() * 40);
+      else setTimeout(() => cursor?.classList.add('done'), 1800);
     };
     setTimeout(tick, 300);
   } else if (h1) {

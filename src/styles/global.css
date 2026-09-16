@@ -152,6 +152,7 @@ main:focus { outline: none; }
 .hero h1 { font-size: clamp(2.4rem, 2vw + 2rem, 5.5rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.03em; }
 .hero h1 .name { color: var(--accent); text-shadow: 0 0 28px rgba(var(--accent-rgb), var(--glow)); }
 .hero h1 .nw { white-space: nowrap; }
+.hero h1 .ch { display: inline; }
 .hero h1 .cursor { display: inline-block; width: 4px; height: 0.85em; background: var(--gold); vertical-align: -0.06em; margin-left: 5px; animation: blink 1s steps(1) infinite; transition: opacity 0.6s; }
 .hero h1 .cursor.done { animation: none; opacity: 0; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -380,5 +381,5 @@ main, footer { position: relative; z-index: 1; }
 .hero .telemetry .busy { color: var(--gold); }
 .hero .telemetry .plus { color: var(--gold); }
 .hero .telemetry .minus { color: rgb(var(--reactor-rgb)); }
-.hero .telemetry .hint { color: var(--text-dim); opacity: 0.7; }
+.hero .telemetry .hint { color: var(--text-dim); }
 @media (max-width: 760px) { .hero .telemetry { display: none; } }
