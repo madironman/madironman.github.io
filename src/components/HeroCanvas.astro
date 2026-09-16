@@ -1,17 +1,23 @@
 ---
-// Arc-reactor HUD rings on the right; Fourier epicycles synthesising a square
-// wave along the bottom. Colours come from the theme tokens so light/dark both
-// work. Static frame under reduced-motion, paused off-screen or when hidden.
+// Hero canvas, two instruments:
+//  1. A live 64-QAM constellation. Cursor distance sets SNR (near = clean
+//     grid, far = noise); scroll speed injects carrier frequency offset that a
+//     PLL-style loop pulls back into lock. Readout shows SNR, EVM, CFO.
+//  2. Fourier epicycles synthesising a square wave. Cursor x sets the number
+//     of harmonics (1..9), cursor speed drives the clock.
+// Theme-aware, reduced-motion aware, paused off-screen or when hidden.
 ---
 <canvas class="hud" id="hud" aria-hidden="true"></canvas>
-<p class="formula">y(t) = 4/π · Σ<sub>k=1..5</sub> sin((2k−1)ωt) / (2k−1) <a href="/fourier">draw your own →</a></p>
+<p class="telemetry" id="telemetry" aria-hidden="true">64-QAM · SNR <span id="t-snr">30</span> dB · EVM <span id="t-evm">3.2</span>% · CFO <span id="t-cfo">0</span> kHz · <span id="t-lock">locked</span></p>
+<p class="formula">y(t) = 4/π · Σ<sub>k=1..<span id="t-harm">5</span></sub> sin((2k−1)ωt) / (2k−1) <a href="/fourier">draw your own →</a></p>
 
 <script>
   const canvas = document.getElementById('hud') as HTMLCanvasElement | null;
   if (canvas) {
     const ctx = canvas.getContext('2d')!;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const HARMONICS = 5;
+    const fine = window.matchMedia('(pointer: fine)').matches;
+    const tSnr = document.getElementById('t-snr')!, tEvm = document.getElementById('t-evm')!, tCfo = document.getElementById('t-cfo')!, tLock = document.getElementById('t-lock')!, tHarm = document.getElementById('t-harm')!;
 
     let ACC = '255, 74, 74', GOLD = '242, 182, 50', CORE = '160, 228, 255';
     const readTheme = () => {
@@ -26,72 +32,107 @@
 
     let w = 0, h = 0, raf = 0, visible = true;
     const t0 = performance.now();
+    let last = t0;
     const wave: number[] = [];
+
+    // ---- input model ----
+    let px = -1, py = -1, ptrSpeed = 0, lastPx = 0, lastPy = 0, lastPtrT = 0, idleSince = 0;
+    let scrollVel = 0, lastScrollY = window.scrollY, lastScrollT = performance.now();
+    canvas.parentElement?.addEventListener('pointermove', (e) => {
+      const r = canvas!.getBoundingClientRect();
+      const now = performance.now();
+      const nx = e.clientX - r.left, ny = e.clientY - r.top;
+      if (lastPtrT) { const dt = Math.max(8, now - lastPtrT); const v = Math.hypot(nx - lastPx, ny - lastPy) / dt * 1000; ptrSpeed = ptrSpeed * 0.8 + v * 0.2; }
+      px = nx; py = ny; lastPx = nx; lastPy = ny; lastPtrT = now; idleSince = now;
+    });
+    canvas.parentElement?.addEventListener('pointerleave', () => { px = -1; py = -1; });
+    window.addEventListener('scroll', () => {
+      const now = performance.now(); const dt = Math.max(8, now - lastScrollT);
+      const v = (window.scrollY - lastScrollY) / dt * 1000; // px/s, signed
+      scrollVel = scrollVel * 0.6 + v * 0.4; lastScrollY = window.scrollY; lastScrollT = now;
+    }, { passive: true });
+
+    // ---- constellation state ----
+    const M = 8; // 64-QAM: 8x8
+    let phi = 0, dphi = 0;        // rotation (CFO) and its rate
+    let sigma = 0.1;              // noise, in units of symbol spacing
+    const trails: { x: number; y: number; a: number }[] = [];
+    // Box-Muller gaussian
+    const gauss = () => { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = canvas!.clientWidth; h = canvas!.clientHeight;
       canvas!.width = w * dpr; canvas!.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      wave.length = 0;
+      wave.length = 0; trails.length = 0;
     }
 
-    function ring(cx: number, cy: number, r: number, rot: number, ticks: number, len: number, alpha: number, color: (a: number) => string) {
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
-      ctx.strokeStyle = color(alpha); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
-      ctx.lineWidth = 1.2;
-      for (let i = 0; i < ticks; i++) {
-        const a = (i / ticks) * Math.PI * 2;
-        const l = i % 5 === 0 ? len * 1.8 : len;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-        ctx.lineTo(Math.cos(a) * (r - l), Math.sin(a) * (r - l));
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    function arcs(cx: number, cy: number, r: number, rot: number, segs: number, gap: number, width: number, alpha: number, color: (a: number) => string) {
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
-      ctx.strokeStyle = color(alpha); ctx.lineWidth = width;
-      const span = (Math.PI * 2) / segs;
-      for (let i = 0; i < segs; i++) { ctx.beginPath(); ctx.arc(0, 0, r, i * span + gap, (i + 1) * span - gap); ctx.stroke(); }
-      ctx.restore();
-    }
-
-    function reactor(t: number) {
+    function constellation(t: number, dt: number) {
       const wide = w > 760;
-      const cx = wide ? w * 0.77 : w * 0.5;
-      const cy = wide ? h * 0.42 : h * 0.36;
-      const R = Math.min(w, h) * (wide ? 0.32 : 0.4);
+      const cx = wide ? w * 0.76 : w * 0.5;
+      const cy = wide ? h * 0.44 : h * 0.34;
+      const R = Math.min(w, h) * (wide ? 0.27 : 0.34);
+      const sp = (2 * R) / M;        // symbol spacing
 
-      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.55);
-      core.addColorStop(0, C(0.26)); core.addColorStop(0.45, C(0.07)); core.addColorStop(1, C(0));
-      ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, cy, R * 0.55, 0, Math.PI * 2); ctx.fill();
+      // Signal quality from cursor distance: inside R is clean, 4R away is noisy.
+      let target = 0.16;
+      if (fine && px >= 0) { const d = Math.hypot(px - cx, py - cy); target = 0.02 + 0.30 * Math.min(1, Math.max(0, (d - R * 0.6) / (R * 3.5))); }
+      else target = 0.10 + 0.05 * Math.sin(t * 0.7);       // no pointer: gentle breathing
+      sigma += (target - sigma) * Math.min(1, dt * 4);
 
-      const pulse = 0.5 + 0.5 * Math.sin(t * 1.6);
-      ctx.fillStyle = C(0.5 + 0.3 * pulse);
-      ctx.beginPath(); ctx.arc(cx, cy, R * 0.06, 0, Math.PI * 2); ctx.fill();
+      // Carrier offset from scroll speed, recovered by a second-order loop.
+      const kick = Math.max(-1, Math.min(1, scrollVel / 2500));
+      dphi += kick * 6 * dt;                                 // scroll injects frequency error
+      dphi += (-phi * 6 - dphi * 3.5) * dt;                  // PLL: proportional + damping
+      phi += dphi * dt;
+      scrollVel *= Math.pow(0.05, dt);                       // scroll velocity decays fast
 
-      ring(cx, cy, R, t * 0.08, 90, 6, 0.4, A);
-      arcs(cx, cy, R * 0.86, -t * 0.14, 8, 0.06, 2.5, 0.35, A);
-      ring(cx, cy, R * 0.72, -t * 0.05, 60, 4, 0.3, G);
-      arcs(cx, cy, R * 0.6, t * 0.22, 3, 0.35, 1.5, 0.55, G);
-      arcs(cx, cy, R * 0.42, -t * 0.3, 12, 0.12, 3, 0.4, A);
-      ring(cx, cy, R * 0.28, t * 0.4, 24, 3, 0.35, C);
+      // faint frame: axes, decision grid, unit circle
+      ctx.strokeStyle = C(0.12); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx - R * 1.15, cy); ctx.lineTo(cx + R * 1.15, cy); ctx.moveTo(cx, cy - R * 1.15); ctx.lineTo(cx, cy + R * 1.15); ctx.stroke();
+      ctx.strokeStyle = C(0.06);
+      for (let i = 0; i <= M; i++) { const o = -R + i * sp; ctx.beginPath(); ctx.moveTo(cx + o, cy - R); ctx.lineTo(cx + o, cy + R); ctx.moveTo(cx - R, cy + o); ctx.lineTo(cx + R, cy + o); ctx.stroke(); }
+      ctx.strokeStyle = G(0.22); ctx.setLineDash([3, 6]);
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.05, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+
+      // trails fade
+      for (let i = trails.length - 1; i >= 0; i--) { trails[i].a -= dt * 1.6; if (trails[i].a <= 0) trails.splice(i, 1); }
+      for (const p of trails) { ctx.fillStyle = A(p.a * 0.35); ctx.fillRect(p.x - 1, p.y - 1, 2, 2); }
+
+      // symbols: ideal grid, rotated by phi, plus gaussian noise
+      const cosP = Math.cos(phi), sinP = Math.sin(phi);
+      const locked = Math.abs(phi) < 0.02 && Math.abs(dphi) < 0.05;
+      for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
+        const ix = (i - (M - 1) / 2) * sp, iy = (j - (M - 1) / 2) * sp;
+        const rx = ix * cosP - iy * sinP, ry = ix * sinP + iy * cosP;
+        const x = cx + rx + gauss() * sigma * sp, y = cy + ry + gauss() * sigma * sp;
+        if (!reduce && Math.random() < 0.35) trails.push({ x, y, a: 1 });
+        ctx.fillStyle = locked ? A(0.95) : G(0.9);
+        ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
+      // pilot at origin
+      ctx.fillStyle = C(0.9); ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+
+      return { sigma, phi, dphi, locked };
     }
 
-    // Fourier synthesis of a square wave: r_n = (4/pi)/n for odd n.
-    function epicycles(t: number) {
+    // Fourier synthesis of a square wave: r_n = (4/pi)/n for odd n. Harmonics follow cursor x.
+    let harm = 5, speedBoost = 1;
+    function epicycles(t: number, dt: number) {
       const amp = Math.min(36, h * 0.05);
       const baseY = h - amp * 1.9 - 18;
-      const cx = 24 + amp * 1.6;
-      const traceX = cx + amp * 1.6 + 28;
-      const speed = 1.4;
+      const cx0 = 24 + amp * 1.6;
+      const traceX = cx0 + amp * 1.6 + 28;
+      const target = fine && px >= 0 ? 1 + Math.round(8 * Math.min(1, Math.max(0, px / w))) : 5;
+      harm = target;
+      const boostTarget = 1 + Math.min(3, ptrSpeed / 700);
+      speedBoost += (boostTarget - speedBoost) * Math.min(1, dt * 3);
+      ptrSpeed *= Math.pow(0.2, dt);
+      const speed = 1.4 * speedBoost;
 
-      let x = cx, y = baseY;
-      for (let k = 1; k <= HARMONICS; k++) {
+      let x = cx0, y = baseY;
+      for (let k = 1; k <= harm; k++) {
         const n = 2 * k - 1;
         const r = (amp * 4) / (Math.PI * n);
         const ang = n * t * speed;
@@ -105,31 +146,42 @@
       ctx.fillStyle = A(0.95); ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
 
       if (!reduce) { wave.unshift(y); if (wave.length > w) wave.length = w; }
-      else if (wave.length === 0) { for (let i = 0; i < w; i++) { let s = 0; for (let k = 1; k <= HARMONICS; k++) { const n = 2 * k - 1; s += Math.sin(n * (t * speed - i * 0.02)) / n; } wave.push(baseY + (amp * 4 / Math.PI) * s); } }
+      else if (wave.length === 0) { for (let i = 0; i < w; i++) { let s = 0; for (let k = 1; k <= harm; k++) { const n = 2 * k - 1; s += Math.sin(n * (t * speed - i * 0.02)) / n; } wave.push(baseY + (amp * 4 / Math.PI) * s); } }
 
       ctx.setLineDash([3, 5]); ctx.strokeStyle = A(0.4); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(traceX, wave[0] ?? y); ctx.stroke();
       ctx.setLineDash([]);
-
       const draw = (width: number, alpha: number) => {
         ctx.strokeStyle = A(alpha); ctx.lineWidth = width; ctx.beginPath();
-        for (let i = 0; i < wave.length && traceX + i < w; i++) { const px = traceX + i; if (i === 0) ctx.moveTo(px, wave[i]); else ctx.lineTo(px, wave[i]); }
+        for (let i = 0; i < wave.length && traceX + i < w; i++) { const pxl = traceX + i; if (i === 0) ctx.moveTo(pxl, wave[i]); else ctx.lineTo(pxl, wave[i]); }
         ctx.stroke();
       };
       draw(4, 0.08); draw(1.3, 0.75);
-
       ctx.strokeStyle = A(0.08);
       ctx.beginPath(); ctx.moveTo(traceX, baseY); ctx.lineTo(w, baseY); ctx.stroke();
     }
 
+    let telemetryAt = 0;
     function draw(now: number) {
       const t = (now - t0) / 1000;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
       ctx.clearRect(0, 0, w, h);
-      reactor(t);
-      epicycles(t);
+      const q = constellation(t, dt);
+      epicycles(t, dt);
+      if (now - telemetryAt > 120) {
+        telemetryAt = now;
+        const evm = q.sigma * 100 * 0.62;                    // % of rms symbol magnitude, 64-QAM
+        const snr = Math.max(0, -20 * Math.log10(Math.max(0.005, evm / 100)));
+        tSnr.textContent = snr.toFixed(0);
+        tEvm.textContent = evm.toFixed(1);
+        tCfo.textContent = (q.dphi * 12).toFixed(q.locked ? 0 : 1);
+        tLock.textContent = q.locked ? 'locked' : 'acquiring';
+        tLock.className = q.locked ? 'ok' : 'busy';
+        tHarm.textContent = String(harm);
+      }
     }
     function loop(now: number) { draw(now); if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(loop); }
-    function start() { cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+    function start() { cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(loop); }
 
     readTheme();
     resize();
