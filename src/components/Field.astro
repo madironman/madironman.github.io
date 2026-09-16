@@ -1,9 +1,11 @@
 ---
-// Full-page background: a lattice of dots lit by the interference of wave
-// sources. Two sources orbit slowly; the cursor is a third that ripples while
-// it moves and fades when it stops. Scroll speed accelerates the whole field.
-// Fixed behind all content, ~30 fps, theme-aware. Skipped on phones, under
-// reduced motion, and when the user prefers reduced data.
+// Full-page background: an electric field, drawn the way iron filings show a
+// magnet. A lattice of short needles aligns to the field of a slowly orbiting
+// dipole. The cursor is a third charge: needles bend around it, and moving it
+// launches expanding wavefronts (an accelerating charge radiates) that sweep
+// the lattice and flip needles as they pass. Scroll spins the dipole.
+// Fixed behind all content, ~30 fps, theme-aware. Off on phones, under reduced
+// motion (single static frame), and when the user prefers reduced data.
 ---
 <canvas class="field" id="field" aria-hidden="true"></canvas>
 
@@ -18,19 +20,35 @@
     let w = 0, h = 0, cols = 0, rows = 0, raf = 0, last = 0, lastDt = 0;
     const t0 = performance.now();
 
-    let ACC = '255, 74, 74', GOLD = '242, 182, 50', light = false;
+    let ACC = '255, 74, 74', GOLD = '242, 182, 50', CORE = '160, 228, 255', light = false;
     const readTheme = () => {
       const s = getComputedStyle(document.documentElement);
       ACC = s.getPropertyValue('--accent-rgb').trim() || ACC;
       GOLD = s.getPropertyValue('--gold-rgb').trim() || GOLD;
+      CORE = s.getPropertyValue('--reactor-rgb').trim() || CORE;
       light = s.getPropertyValue('color-scheme').trim() === 'light';
     };
+    const lift = (a: number) => Math.min(1, light ? a * 1.9 : a);
 
-    // cursor source
-    let px = -1e4, py = -1e4, strength = 0, lastMove = 0;
-    window.addEventListener('pointermove', (e) => { px = e.clientX; py = e.clientY; strength = Math.min(1, strength + 0.25); lastMove = performance.now(); }, { passive: true });
-    // scroll accelerates the field
-    let scrollVel = 0, lastY = window.scrollY, lastT = performance.now(), phase = 0;
+    // ---- cursor charge and radiation ----
+    let px = -1e4, py = -1e4, charge = 0, lastMove = 0, lastRingX = 0, lastRingY = 0, lastRingT = 0;
+    type Ring = { x: number; y: number; r: number; a: number };
+    const rings: Ring[] = [];
+    window.addEventListener('pointermove', (e) => {
+      const now = performance.now();
+      px = e.clientX; py = e.clientY; lastMove = now;
+      charge = Math.min(1, charge + 0.2);
+      // radiate: one wavefront per ~70 ms of motion, if the cursor actually moved
+      if (now - lastRingT > 70 && Math.hypot(px - lastRingX, py - lastRingY) > 10) {
+        rings.push({ x: px, y: py, r: 0, a: 1 });
+        if (rings.length > 14) rings.shift();
+        lastRingX = px; lastRingY = py; lastRingT = now;
+      }
+    }, { passive: true });
+    window.addEventListener('pointerleave', () => { px = -1e4; py = -1e4; });
+
+    // ---- scroll spins the dipole ----
+    let scrollVel = 0, lastY = window.scrollY, lastT = performance.now(), spin = 0;
     window.addEventListener('scroll', () => { const now = performance.now(); const dt = Math.max(8, now - lastT); scrollVel = scrollVel * 0.5 + Math.abs(window.scrollY - lastY) / dt * 1000 * 0.5; lastY = window.scrollY; lastT = now; }, { passive: true });
 
     function resize() {
@@ -39,38 +57,88 @@
       cols = Math.ceil(w / STEP) + 1; rows = Math.ceil(h / STEP) + 1;
     }
 
+    const BUCKETS = 10;
+    const paths: Path2D[] = [];
+
     function draw(now: number) {
       const t = (now - t0) / 1000;
       const dt = Math.min(0.1, lastDt);
-      // decay inputs
-      if (now - lastMove > 120) strength = Math.max(0, strength - dt * 0.9);
+
+      // inputs decay
+      if (now - lastMove > 150) charge = Math.max(0, charge - dt * 0.6);
       scrollVel *= Math.pow(0.08, dt);
-      const speed = 1.1 * (1 + Math.min(2.5, scrollVel / 900));
-      phase += speed * dt;
+      spin += (0.12 + Math.min(1.6, scrollVel / 700)) * dt;
+      for (let i = rings.length - 1; i >= 0; i--) { const g = rings[i]; g.r += 420 * dt; g.a -= dt * 0.62; if (g.a <= 0) rings.splice(i, 1); }
+
+      // the dipole: +q and -q orbiting the screen centre, with a slow ellipse
+      const ox = w * 0.5, oy = h * 0.5, ax = w * 0.32, ay = h * 0.30;
+      const qx1 = ox + ax * Math.cos(spin), qy1 = oy + ay * Math.sin(spin);
+      const qx2 = ox - ax * Math.cos(spin * 0.9 + 0.6), qy2 = oy - ay * Math.sin(spin * 0.9 + 0.6);
+      const soft = 60 * 60;
 
       ctx.clearRect(0, 0, w, h);
-      const s1x = w * (0.5 + 0.35 * Math.cos(t * 0.11)), s1y = h * (0.5 + 0.35 * Math.sin(t * 0.09));
-      const s2x = w * (0.5 + 0.35 * Math.cos(t * 0.07 + 2)), s2y = h * (0.5 + 0.35 * Math.sin(t * 0.13 + 1));
-      const k = 0.045;
-      const base = light ? 0.06 : 0.03, range = light ? 0.18 : 0.12;
-      const cursorOn = strength > 0.01;
+      for (let b = 0; b < BUCKETS; b++) paths[b] = new Path2D();
+      const hot = new Path2D();
+
       for (let j = 0; j < rows; j++) {
         const y = j * STEP;
         for (let i = 0; i < cols; i++) {
           const x = i * STEP;
-          const d1 = Math.hypot(x - s1x, y - s1y), d2 = Math.hypot(x - s2x, y - s2y);
-          let v = (Math.sin(d1 * k - phase) + Math.sin(d2 * k - phase)) * 0.5;
-          if (cursorOn) {
-            const d3 = Math.hypot(x - px, y - py);
-            // tight ripple, strongest near the cursor, fading with distance
-            v += strength * Math.sin(d3 * 0.09 - phase * 2.2) * Math.max(0, 1 - d3 / 420);
+          // E = sum q * r / |r|^3 with softening
+          let ex = 0, ey = 0;
+          let dx = x - qx1, dy = y - qy1, d2 = dx * dx + dy * dy + soft, inv = 1 / (d2 * Math.sqrt(d2));
+          ex += dx * inv; ey += dy * inv;
+          dx = x - qx2; dy = y - qy2; d2 = dx * dx + dy * dy + soft; inv = 1 / (d2 * Math.sqrt(d2));
+          ex -= dx * inv; ey -= dy * inv;
+          if (charge > 0.01) {
+            dx = x - px; dy = y - py; d2 = dx * dx + dy * dy + soft * 0.5; inv = charge * 2.2 / (d2 * Math.sqrt(d2));
+            ex += dx * inv; ey += dy * inv;
           }
-          v = Math.max(-1, Math.min(1.4, v));
-          const a = base + range * (v + 1) * 0.5;
-          if (v > 0.82) { ctx.fillStyle = `rgba(${GOLD}, ${a + (light ? 0.14 : 0.1)})`; ctx.fillRect(x - 1, y - 1, 2, 2); }
-          else { ctx.fillStyle = `rgba(${ACC}, ${a})`; ctx.fillRect(x, y, 1.4, 1.4); }
+          let mag = Math.hypot(ex, ey);
+          if (mag < 1e-9) continue;
+          let ux = ex / mag, uy = ey / mag;
+
+          // radiation: a passing wavefront brightens the needle and swings it radial
+          let glow = 0;
+          for (const g of rings) {
+            const dr = Math.hypot(x - g.x, y - g.y) - g.r;
+            if (dr > -22 && dr < 22) {
+              const k = (1 - Math.abs(dr) / 22) * g.a;
+              glow = Math.max(glow, k);
+              const rx = (x - g.x) / (g.r + 1e-3), ry = (y - g.y) / (g.r + 1e-3);
+              ux = ux * (1 - k) + rx * k; uy = uy * (1 - k) + ry * k;
+              const n = Math.hypot(ux, uy) || 1; ux /= n; uy /= n;
+            }
+          }
+
+          // needle length and brightness follow log field strength
+          const s = Math.min(1, Math.max(0, (Math.log10(mag * 1e6) + 1.2) / 3.2));
+          const len = 4 + 9 * s + 6 * glow;
+          const alpha = 0.04 + 0.22 * s;
+          const b = Math.min(BUCKETS - 1, Math.floor(alpha / 0.26 * BUCKETS));
+          const path = glow > 0.25 ? hot : paths[b];
+          path.moveTo(x - ux * len * 0.5, y - uy * len * 0.5);
+          path.lineTo(x + ux * len * 0.5, y + uy * len * 0.5);
         }
       }
+      ctx.lineWidth = 1;
+      ctx.lineCap = 'round';
+      for (let b = 0; b < BUCKETS; b++) { ctx.strokeStyle = `rgba(${ACC}, ${lift(0.04 + (b + 0.5) * 0.026)})`; ctx.stroke(paths[b]); }
+      ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.55)})`; ctx.lineWidth = 1.4; ctx.stroke(hot);
+
+      // wavefronts themselves, faint
+      ctx.lineWidth = 1;
+      for (const g of rings) { ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.12 * g.a)})`; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2); ctx.stroke(); }
+
+      // the charges: + in red, − in the reactor blue, and the cursor's + when present
+      const mark = (x: number, y: number, sign: 1 | -1, a: number, col: string) => {
+        ctx.strokeStyle = `rgba(${col}, ${lift(a)})`; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 3.5, y); ctx.lineTo(x + 3.5, y); if (sign > 0) { ctx.moveTo(x, y - 3.5); ctx.lineTo(x, y + 3.5); } ctx.stroke();
+      };
+      mark(qx1, qy1, 1, 0.35, ACC);
+      mark(qx2, qy2, -1, 0.35, CORE);
+      if (charge > 0.05) mark(px, py, 1, 0.25 * charge, GOLD);
     }
 
     function loop(now: number) {
