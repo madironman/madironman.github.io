@@ -59,6 +59,7 @@
     const M = 8; // 64-QAM: 8x8
     let phi = 0, dphi = 0;        // rotation (CFO) and its rate
     let sigma = 0.1;              // noise, in units of symbol spacing
+    let legI = 0, legQ = 0, legS = 0.1;   // smoothed legend readouts
     const trails: { x: number; y: number; a: number }[] = [];
     // Box-Muller gaussian
     const gauss = () => { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
@@ -103,19 +104,45 @@
       for (let i = trails.length - 1; i >= 0; i--) { trails[i].a -= dt * 1.6; if (trails[i].a <= 0) trails.splice(i, 1); }
       for (const p of trails) { ctx.fillStyle = A(p.a * 0.35); ctx.fillRect(p.x - 1, p.y - 1, 2, 2); }
 
-      // symbols: ideal grid, rotated by phi, plus gaussian noise
+      // axis legend: I and Q, the eight 64-QAM levels, drawn very quietly
+      ctx.font = '10px "IBM Plex Mono", ui-monospace, monospace';
+      ctx.fillStyle = C(0.42); ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left'; ctx.fillText('I', cx + R * 1.15 + 6, cy);
+      ctx.textAlign = 'center'; ctx.fillText('Q', cx, cy - R * 1.15 - 10);
+      ctx.fillStyle = C(0.22);
+      for (let i = 0; i < M; i++) {
+        const lvl = 2 * i - (M - 1);                    // -7 .. +7
+        const o = (i - (M - 1) / 2) * sp;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(String(lvl), cx + o, cy + R + 6);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(String(-lvl), cx - R - 6, cy + o);
+      }
+
+      // symbols: ideal grid, rotated by phi, plus gaussian noise; track the noise mean for the legend
       const cosP = Math.cos(phi), sinP = Math.sin(phi);
       const locked = Math.abs(phi) < 0.02 && Math.abs(dphi) < 0.05;
+      let mI = 0, mQ = 0;
       for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
         const ix = (i - (M - 1) / 2) * sp, iy = (j - (M - 1) / 2) * sp;
         const rx = ix * cosP - iy * sinP, ry = ix * sinP + iy * cosP;
-        const x = cx + rx + gauss() * sigma * sp, y = cy + ry + gauss() * sigma * sp;
+        const nI = gauss() * sigma, nQ = gauss() * sigma;
+        mI += nI; mQ += nQ;
+        const x = cx + rx + nI * sp, y = cy + ry + nQ * sp;
         if (!reduce && Math.random() < 0.35) trails.push({ x, y, a: 1 });
         ctx.fillStyle = locked ? A(0.95) : G(0.9);
         ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
       }
       // pilot at origin
       ctx.fillStyle = C(0.9); ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+
+      // live readouts on the axes: DC offset estimate and noise sigma, smoothed so they drift, not flicker
+      legI += ((mI / (M * M)) * 2 - legI) * Math.min(1, dt * 1.5);
+      legQ += ((mQ / (M * M)) * 2 - legQ) * Math.min(1, dt * 1.5);
+      legS += (sigma - legS) * Math.min(1, dt * 1.5);
+      ctx.fillStyle = C(0.5); ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left'; ctx.fillText(`I₀ ${legI >= 0 ? '+' : '−'}${Math.abs(legI).toFixed(3)}`, cx + R * 1.15 + 6, cy + 14);
+      ctx.textAlign = 'center'; ctx.fillText(`Q₀ ${legQ >= 0 ? '+' : '−'}${Math.abs(legQ).toFixed(3)}`, cx, cy - R * 1.15 - 24);
+      ctx.textAlign = 'right'; ctx.fillText(`σ ${legS.toFixed(3)}`, cx + R, cy + R + 22);
+      ctx.textAlign = 'left'; ctx.fillText(`φ ${((phi * 180) / Math.PI).toFixed(1)}°`, cx - R, cy + R + 22);
 
       return { sigma, phi, dphi, locked };
     }

@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+const pdf = '/Madhevan_Ramalingam_Resume.pdf';
+---
+<Base title="Resume" description={`Resume of ${site.legalName}, firmware and SoC systems engineer: six years on 802.11 Wi-Fi silicon, low-power architecture, pre-silicon bring-up.`} imageAlt={`Resume of ${site.legalName}`}>
+  <section class="block resume">
+    <div class="head">
+      <div>
+        <p class="eyebrow">Resume · PDF · two pages</p>
+        <h1>{site.legalName}</h1>
+        <p class="lede">{site.title}. {site.tagline}</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href={pdf} download="Madhevan_Ramalingam_Resume.pdf">Download PDF</a>
+        <a class="btn gold" href={pdf} target="_blank" rel="noopener">Open in a new tab</a>
+      </div>
+    </div>
+    <object class="viewer" data={`${pdf}#view=FitH`} type="application/pdf" aria-label="Resume PDF">
+      <p class="fallback">Your browser will not show PDFs inline. <a href={pdf}>Open the resume</a> instead.</p>
+    </object>
+  </section>
+</Base>
+
+<style>
+  .resume h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin-bottom: 0.3rem; }
+  .resume .lede { margin: 0; }
+  .head { display: flex; justify-content: space-between; align-items: end; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  .actions .btn { margin-top: 0; }
+  .viewer { display: block; width: 100%; height: calc(100vh - 220px); min-height: 640px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg-2); }
+  .fallback { padding: 1.5rem; color: var(--text-dim); }
+</style>

@@ -29,7 +29,7 @@ Everything on the site is written under an employer NDA. The rules that keep it 
 - Writing covers public mechanisms: standards, architecture, debugging methods. Not client incidents.
 - Tooling cards describe the class of problem, not the implementation. No code, no repos.
 - Projects are pre-employment or generic study material only.
-- The resume at `public/Madhevan_Ramalingam_Resume.pdf` is the version the user signed off (Resume_9). Replace it only with a newer signed-off version.
+- The resume at `public/Madhevan_Ramalingam_Resume.pdf` is the version the user signed off. Replace it only with a newer signed-off version, then re-run the metadata step (title/author) so the PDF tab is named. `/resume` wraps it with the site head and a viewer.
 - Fonts are self-hosted latin subsets in `public/fonts`; add weights there and in the `@font-face` block at the end of `global.css`, never via a Google Fonts link.
 
 ## Deploy

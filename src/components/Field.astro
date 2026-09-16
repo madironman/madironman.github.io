@@ -1,10 +1,12 @@
 ---
-// Full-page background: an electric field, drawn the way iron filings show a
-// magnet. A lattice of short needles aligns to the field of a slowly orbiting
-// dipole. The cursor is a third charge: needles bend around it, and moving it
-// launches expanding wavefronts (an accelerating charge radiates) that sweep
-// the lattice and flip needles as they pass. Scroll spins the dipole.
-// Fixed behind all content, ~30 fps, theme-aware. Off on phones, under reduced
+// Full-page background: an electromagnetic field, kept quiet.
+//  E: a lattice of short needles aligned to the electric field of a +/− pair
+//     orbiting the screen centre; the cursor is a third charge.
+//  B: a moving charge is a current, so while the cursor moves, faint circular
+//     magnetic field lines wrap around it, perpendicular to its velocity.
+//  Radiation: an accelerating charge radiates, so motion launches expanding
+//     wavefronts that sweep the lattice and briefly swing needles radial.
+// Scroll spins the dipole. ~30 fps, theme-aware. Off on phones, under reduced
 // motion (single static frame), and when the user prefers reduced data.
 ---
 <canvas class="field" id="field" aria-hidden="true"></canvas>
@@ -30,18 +32,22 @@
     };
     const lift = (a: number) => Math.min(1, light ? a * 1.9 : a);
 
-    // ---- cursor charge and radiation ----
-    let px = -1e4, py = -1e4, charge = 0, lastMove = 0, lastRingX = 0, lastRingY = 0, lastRingT = 0;
+    // ---- cursor: charge, velocity (for B), radiation (for the EM wave) ----
+    let px = -1e4, py = -1e4, charge = 0, lastMove = 0;
+    let vx = 0, vy = 0, lastPx = 0, lastPy = 0, lastPt = 0;
+    let lastRingX = 0, lastRingY = 0, lastRingT = 0;
     type Ring = { x: number; y: number; r: number; a: number };
     const rings: Ring[] = [];
     window.addEventListener('pointermove', (e) => {
       const now = performance.now();
+      if (lastPt) { const dt = Math.max(8, now - lastPt) / 1000; vx = vx * 0.6 + ((e.clientX - lastPx) / dt) * 0.4; vy = vy * 0.6 + ((e.clientY - lastPy) / dt) * 0.4; }
+      lastPx = e.clientX; lastPy = e.clientY; lastPt = now;
       px = e.clientX; py = e.clientY; lastMove = now;
       charge = Math.min(1, charge + 0.2);
-      // radiate: one wavefront per ~70 ms of motion, if the cursor actually moved
-      if (now - lastRingT > 70 && Math.hypot(px - lastRingX, py - lastRingY) > 10) {
+      // radiate: one wavefront per ~140 ms of real movement
+      if (now - lastRingT > 140 && Math.hypot(px - lastRingX, py - lastRingY) > 14) {
         rings.push({ x: px, y: py, r: 0, a: 1 });
-        if (rings.length > 14) rings.shift();
+        if (rings.length > 8) rings.shift();
         lastRingX = px; lastRingY = py; lastRingT = now;
       }
     }, { passive: true });
@@ -57,7 +63,7 @@
       cols = Math.ceil(w / STEP) + 1; rows = Math.ceil(h / STEP) + 1;
     }
 
-    const BUCKETS = 10;
+    const BUCKETS = 8;
     const paths: Path2D[] = [];
 
     function draw(now: number) {
@@ -65,12 +71,12 @@
       const dt = Math.min(0.1, lastDt);
 
       // inputs decay
-      if (now - lastMove > 150) charge = Math.max(0, charge - dt * 0.6);
+      if (now - lastMove > 150) { charge = Math.max(0, charge - dt * 0.8); vx *= Math.pow(0.02, dt); vy *= Math.pow(0.02, dt); }
       scrollVel *= Math.pow(0.08, dt);
-      spin += (0.12 + Math.min(1.6, scrollVel / 700)) * dt;
-      for (let i = rings.length - 1; i >= 0; i--) { const g = rings[i]; g.r += 420 * dt; g.a -= dt * 0.62; if (g.a <= 0) rings.splice(i, 1); }
+      spin += (0.07 + Math.min(1.0, scrollVel / 900)) * dt;
+      for (let i = rings.length - 1; i >= 0; i--) { const g = rings[i]; g.r += 360 * dt; g.a -= dt * 0.7; if (g.a <= 0) rings.splice(i, 1); }
 
-      // the dipole: +q and -q orbiting the screen centre, with a slow ellipse
+      // the dipole: +q and −q orbiting the screen centre on a slow ellipse
       const ox = w * 0.5, oy = h * 0.5, ax = w * 0.32, ay = h * 0.30;
       const qx1 = ox + ax * Math.cos(spin), qy1 = oy + ay * Math.sin(spin);
       const qx2 = ox - ax * Math.cos(spin * 0.9 + 0.6), qy2 = oy - ay * Math.sin(spin * 0.9 + 0.6);
@@ -84,7 +90,7 @@
         const y = j * STEP;
         for (let i = 0; i < cols; i++) {
           const x = i * STEP;
-          // E = sum q * r / |r|^3 with softening
+          // E = Σ q · r / |r|³, softened
           let ex = 0, ey = 0;
           let dx = x - qx1, dy = y - qy1, d2 = dx * dx + dy * dy + soft, inv = 1 / (d2 * Math.sqrt(d2));
           ex += dx * inv; ey += dy * inv;
@@ -94,16 +100,16 @@
             dx = x - px; dy = y - py; d2 = dx * dx + dy * dy + soft * 0.5; inv = charge * 2.2 / (d2 * Math.sqrt(d2));
             ex += dx * inv; ey += dy * inv;
           }
-          let mag = Math.hypot(ex, ey);
+          const mag = Math.hypot(ex, ey);
           if (mag < 1e-9) continue;
           let ux = ex / mag, uy = ey / mag;
 
-          // radiation: a passing wavefront brightens the needle and swings it radial
+          // a passing wavefront swings the needle radial and lifts it briefly
           let glow = 0;
           for (const g of rings) {
             const dr = Math.hypot(x - g.x, y - g.y) - g.r;
-            if (dr > -22 && dr < 22) {
-              const k = (1 - Math.abs(dr) / 22) * g.a;
+            if (dr > -20 && dr < 20) {
+              const k = (1 - Math.abs(dr) / 20) * g.a;
               glow = Math.max(glow, k);
               const rx = (x - g.x) / (g.r + 1e-3), ry = (y - g.y) / (g.r + 1e-3);
               ux = ux * (1 - k) + rx * k; uy = uy * (1 - k) + ry * k;
@@ -111,34 +117,44 @@
             }
           }
 
-          // needle length and brightness follow log field strength
           const s = Math.min(1, Math.max(0, (Math.log10(mag * 1e6) + 1.2) / 3.2));
-          const len = 4 + 9 * s + 6 * glow;
-          const alpha = 0.04 + 0.22 * s;
-          const b = Math.min(BUCKETS - 1, Math.floor(alpha / 0.26 * BUCKETS));
-          const path = glow > 0.25 ? hot : paths[b];
+          const len = 4 + 8 * s + 4 * glow;
+          const alpha = 0.03 + 0.14 * s;
+          const b = Math.min(BUCKETS - 1, Math.floor(alpha / 0.17 * BUCKETS));
+          const path = glow > 0.3 ? hot : paths[b];
           path.moveTo(x - ux * len * 0.5, y - uy * len * 0.5);
           path.lineTo(x + ux * len * 0.5, y + uy * len * 0.5);
         }
       }
-      ctx.lineWidth = 1;
-      ctx.lineCap = 'round';
-      for (let b = 0; b < BUCKETS; b++) { ctx.strokeStyle = `rgba(${ACC}, ${lift(0.04 + (b + 0.5) * 0.026)})`; ctx.stroke(paths[b]); }
-      ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.55)})`; ctx.lineWidth = 1.4; ctx.stroke(hot);
+      ctx.lineWidth = 1; ctx.lineCap = 'round';
+      for (let b = 0; b < BUCKETS; b++) { ctx.strokeStyle = `rgba(${ACC}, ${lift(0.03 + (b + 0.5) * 0.0175)})`; ctx.stroke(paths[b]); }
+      ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.32)})`; ctx.lineWidth = 1.2; ctx.stroke(hot);
 
-      // wavefronts themselves, faint
+      // the radiated wavefronts, faint
       ctx.lineWidth = 1;
-      for (const g of rings) { ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.12 * g.a)})`; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2); ctx.stroke(); }
+      for (const g of rings) { ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.07 * g.a)})`; ctx.beginPath(); ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2); ctx.stroke(); }
 
-      // the charges: + in red, − in the reactor blue, and the cursor's + when present
+      // B: a moving charge is a current; magnetic field lines circle it, perpendicular to v.
+      // Drawn as ellipses squashed along the velocity, so they read as rings seen edge-on.
+      const speed = Math.hypot(vx, vy);
+      if (charge > 0.05 && speed > 40) {
+        const k = Math.min(1, speed / 1200);
+        const ang = Math.atan2(vy, vx);
+        ctx.save(); ctx.translate(px, py); ctx.rotate(ang);
+        ctx.strokeStyle = `rgba(${CORE}, ${lift(0.16 * k * charge)})`; ctx.lineWidth = 1;
+        for (let r = 14; r <= 14 + 16 * 3; r += 16) { ctx.beginPath(); ctx.ellipse(0, 0, r * 0.35, r, 0, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.restore();
+      }
+
+      // the charges: + in red, − in the reactor blue; the cursor's + in gold while it carries charge
       const mark = (x: number, y: number, sign: 1 | -1, a: number, col: string) => {
         ctx.strokeStyle = `rgba(${col}, ${lift(a)})`; ctx.lineWidth = 1.2;
         ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(x - 3.5, y); ctx.lineTo(x + 3.5, y); if (sign > 0) { ctx.moveTo(x, y - 3.5); ctx.lineTo(x, y + 3.5); } ctx.stroke();
       };
-      mark(qx1, qy1, 1, 0.35, ACC);
-      mark(qx2, qy2, -1, 0.35, CORE);
-      if (charge > 0.05) mark(px, py, 1, 0.25 * charge, GOLD);
+      mark(qx1, qy1, 1, 0.25, ACC);
+      mark(qx2, qy2, -1, 0.25, CORE);
+      if (charge > 0.05) mark(px, py, 1, 0.18 * charge, GOLD);
     }
 
     function loop(now: number) {
