@@ -4,11 +4,15 @@ import { getCollection, render } from 'astro:content';
 import { site } from '../../data/site';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('writing', ({ data }) => !data.draft);
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  const posts = (await getCollection('writing', ({ data }) => !data.draft))
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1] ?? null, older: posts[i + 1] ?? null },
+  }));
 }
 
-const { post } = Astro.props;
+const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
 const words = (post.body ?? '').split(/\s+/).length;
 const minutes = Math.max(1, Math.round(words / 220));
@@ -24,6 +28,10 @@ const date = post.data.date.toLocaleDateString('en-GB', { day: 'numeric', month:
     <div class="body"><Content /></div>
     <footer class="article-end">
       <p>Written by <a href="/">{site.fullName}</a>, firmware and SoC systems engineer. Found a mistake or want to argue about it? <a href={`mailto:${site.email}?subject=${encodeURIComponent('Re: ' + post.data.title)}`}>Email me</a>.</p>
+      <nav class="article-nav" aria-label="More writing">
+        {older ? <a href={`/writing/${older.id}`}><small>Older</small>{older.data.title}</a> : <a href="/writing"><small>Index</small>All writing</a>}
+        {newer ? <a class="next" href={`/writing/${newer.id}`}><small>Newer</small>{newer.data.title}</a> : <a class="next" href="/writing"><small>Index</small>All writing</a>}
+      </nav>
     </footer>
   </article>
 </Base>

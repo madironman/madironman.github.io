@@ -61,19 +61,19 @@ export const tooling: Project[] = [
 // material with no connection to customer products.
 export const projects: Project[] = [
   {
-    name: 'TV white space for mobile communication',
-    status: 'past',
-    statusLabel: 'Ericsson Research India internship · Dec 2019 – Mar 2020',
-    description: 'Final-year thesis: television white space for mobile communication in rural and hilly terrain. Drove transmit and receive directly from Raspberry Pi GPIO pins instead of dedicated RF transceiver chips.',
-    tech: 'Raspberry Pi · GPIO bit-bang · TV white space',
-  },
-  {
     name: 'Fourier lab',
     status: 'shipped',
     statusLabel: 'live · interactive',
     description: 'Draw any closed shape and watch it decomposed into a Fourier series, then redrawn by a chain of rotating circles. Adjustable term count, phase and amplitude readout, five presets. No libraries.',
     tech: 'TypeScript · Canvas · DFT',
     link: '/fourier',
+  },
+  {
+    name: 'TV white space for mobile communication',
+    status: 'past',
+    statusLabel: 'Ericsson Research India internship · Dec 2019 – Mar 2020',
+    description: 'Final-year thesis: television white space for mobile communication in rural and hilly terrain. Drove transmit and receive directly from Raspberry Pi GPIO pins instead of dedicated RF transceiver chips.',
+    tech: 'Raspberry Pi · GPIO bit-bang · TV white space',
   },
   {
     name: 'Firmware interview notes',

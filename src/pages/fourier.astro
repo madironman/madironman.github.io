@@ -18,12 +18,12 @@ import Base from '../layouts/Base.astro';
     </div>
 
     <div class="controls">
-      <label>Circles <span id="terms-out">5</span>
-        <input type="range" id="terms" min="0" max="100" value="27" />
-      </label>
       <div class="quick" role="group" aria-label="Quick circle counts">
         <button type="button" data-n="1">1</button><button type="button" data-n="2">2</button><button type="button" data-n="3">3</button><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button><button type="button" data-n="50">50</button><button type="button" data-n="100">100</button><button type="button" data-n="all">all</button>
       </div>
+      <label>Circles <span id="terms-out">5</span>
+        <input type="range" id="terms" min="0" max="100" value="27" />
+      </label>
       <label>Speed <span id="speed-out">1×</span>
         <input type="range" id="speed" min="0.25" max="4" step="0.25" value="1" />
       </label>
@@ -90,20 +90,21 @@ import Base from '../layouts/Base.astro';
   .controls { display: flex; flex-wrap: wrap; gap: 1.2rem 2rem; align-items: end; margin: 1.2rem 0 1.6rem; }
   .controls label { display: flex; flex-direction: column; gap: 0.35rem; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--text-dim); }
   .controls label span { color: var(--accent); margin-left: 0.4rem; }
+  .controls label { font-size: 0.82rem; }
   .controls input[type="range"] { width: 200px; accent-color: var(--accent); }
   .controls .check { flex-direction: row; align-items: center; gap: 0.5rem; }
   .controls .check input { accent-color: var(--accent); }
   .quick { display: flex; gap: 0.3rem; align-items: center; }
-  .quick button { all: unset; cursor: pointer; font-family: var(--mono); font-size: 0.74rem; padding: 0.3rem 0.55rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text-dim); }
+  .quick button { all: unset; cursor: pointer; font-family: var(--mono); font-size: 0.82rem; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 0.6rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text-dim); }
   .quick button:hover, .quick button.on { border-color: var(--accent); color: var(--accent); }
   .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-  .presets .hud-label { font-size: 0.72rem; color: var(--gold); margin-right: 0.3rem; }
-  .presets button { all: unset; cursor: pointer; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; padding: 0.4rem 0.8rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text); transition: all 0.15s; }
+  .presets .hud-label { font-size: 0.82rem; color: var(--gold); margin-right: 0.3rem; }
+  .presets button { all: unset; cursor: pointer; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82rem; min-height: 44px; display: inline-flex; align-items: center; padding: 0 0.9rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text); transition: all 0.15s; }
   .presets button:hover { border-color: var(--accent); color: var(--accent); }
   .presets button.danger:hover { border-color: var(--gold); color: var(--gold); }
   .readout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.2rem; margin-bottom: 2.5rem; }
   .readout > div { border: 1px solid var(--line); border-radius: 6px; background: var(--bg-2); padding: 1.2rem 1.4rem; }
-  .readout .hud-label { font-size: 0.72rem; color: var(--gold); margin: 0 0 0.6rem; }
+  .readout .hud-label { font-size: 0.82rem; color: var(--gold); margin: 0 0 0.6rem; }
   .eq { font-family: var(--mono); font-size: 0.92rem; color: var(--head); margin: 0 0 0.6rem; }
   .eq sub, .eq sup { font-size: 0.7em; }
   .readout .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); margin: 0 0 0.4rem; }
@@ -112,7 +113,7 @@ import Base from '../layouts/Base.astro';
   #terms-table th { text-align: left; font-family: var(--hud); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.68rem; color: var(--text-dim); padding: 0 0.4rem 0.4rem 0; }
   #terms-table td { padding: 0.2rem 0.4rem 0.2rem 0; border-top: 1px solid var(--line); color: var(--text); }
   #terms-table td.k { color: var(--accent); }
-  #terms-table td.role { color: var(--text-dim); }
+  #terms-table td.role { color: var(--text-dim); white-space: normal; }
   .explainer h2 { font-size: 1.4rem; }
   .explainer p { color: var(--text-dim); max-width: 720px; }
   @media (max-width: 760px) { .readout { grid-template-columns: 1fr; } }

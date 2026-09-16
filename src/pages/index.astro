@@ -9,7 +9,7 @@ import { site } from '../data/site';
 
 const posts = (await getCollection('writing', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 4);
+  .slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const md = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -31,9 +31,10 @@ const VISIBLE = 4;
       <a class="btn gold" href="/Madhevan_Ramalingam_Resume.pdf" target="_blank" rel="noopener">Resume (PDF)</a>
       <a class="textlink" href={site.linkedin} target="_blank" rel="noopener">or find me on LinkedIn →</a>
     </div>
+    <a class="cue" href="#stats">↓ six years in four numbers</a>
   </section>
 
-  <section class="stats reveal" aria-label="At a glance">
+  <section class="stats reveal" id="stats" aria-label="At a glance">
     {stats.map((s) => (
       <div class={`stat${s.highlight ? ' hi' : ''}`}>
         <span class="value">{s.value}</span>
@@ -42,8 +43,69 @@ const VISIBLE = 4;
     ))}
   </section>
 
+  <section class="block reveal" id="experience">
+    <h2>Experience</h2>
+    <div class="xp">
+      <div class="tabs" role="tablist" aria-label="Engagements">
+        {jobs.map((j, i) => (
+          <button role="tab" id={`tab-${j.id}`} aria-controls={`panel-${j.id}`} aria-selected={i === 0 ? 'true' : 'false'}>{j.tab}</button>
+        ))}
+      </div>
+      {jobs.map((j, i) => (
+        <div class="panel" role="tabpanel" id={`panel-${j.id}`} aria-labelledby={`tab-${j.id}`} hidden={i !== 0}>
+          <h3>{j.title}</h3>
+          <p class="meta">{j.period} · {j.client}</p>
+          <ul id={`list-${j.id}`}>
+            {j.bullets.map((b, k) => <li class={k >= VISIBLE ? 'more-item' : ''} set:html={md(b)} />)}
+          </ul>
+          {j.bullets.length > VISIBLE && (
+            <button class="expand" type="button" data-expand={`list-${j.id}`} data-label={`Show ${j.bullets.length - VISIBLE} more`} aria-expanded="false">Show {j.bullets.length - VISIBLE} more</button>
+          )}
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="recognition reveal" aria-label="Recognition">
+    {recognition.map((r) => <span class="item"><span class="star">✦</span>{r}</span>)}
+  </section>
+
+  <section class="block reveal" id="writing">
+    <h2>Writing</h2>
+    <p class="lede">
+      Notes on mechanisms that firmware engineers keep meeting: how things work, why they fail,
+      and what the fix pattern looks like.
+    </p>
+    <ul class="posts">
+      {posts.map((p, i) => (
+        <li class="reveal" style={`--i: ${i}`}>
+          <time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time>
+          <div>
+            <h3><a href={`/writing/${p.id}`}>{p.data.title}</a></h3>
+            <p>{p.data.summary}</p>
+            <div class="tags">{p.data.tags.map((t) => <span>#{t}</span>)}</div>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <a class="more" href="/writing">All writing →</a>
+  </section>
+
+  <section class="block reveal" id="projects">
+    <h2>Projects</h2>
+    <div class="grid">{projects.map((p, i) => <Card p={p} i={i} />)}</div>
+  </section>
+
+  <section class="block reveal" id="tooling">
+    <h2>Tooling I built</h2>
+    <p class="lede">
+      For bring-up and debug work, described by the problem each one solved.
+    </p>
+    <div class="grid">{tooling.map((p, i) => <Card p={p} i={i} />)}</div>
+  </section>
+
   <section class="block reveal" id="about">
-    <h2><span class="num">01</span>about me</h2>
+    <h2>About</h2>
     <div class="about">
       <div>
         <p>
@@ -74,91 +136,22 @@ const VISIBLE = 4;
         <li>JTAG / ADIv5</li><li>OpenOCD / GDB</li><li>Lauterbach TRACE32</li><li>Emulation / FPGA</li>
       </ul>
     </div>
-  </section>
-
-  <section class="block reveal" id="principles">
-    <h2><span class="num">02</span>how I work</h2>
-    <div class="principles">
-      {principles.map((p, i) => (
-        <div class="principle reveal" style={`--i: ${i}`}>
-          <span class="idx">{String(i + 1).padStart(2, '0')}</span>
-          <h3>{p.title}</h3>
-          <p>{p.body}</p>
-        </div>
-      ))}
-    </div>
-  </section>
-
-  <section class="block reveal" id="experience">
-    <h2><span class="num">03</span>experience</h2>
-    <div class="xp">
-      <div class="tabs" role="tablist" aria-label="Engagements">
-        {jobs.map((j, i) => (
-          <button role="tab" id={`tab-${j.id}`} aria-controls={`panel-${j.id}`} aria-selected={i === 0 ? 'true' : 'false'}>{j.tab}</button>
-        ))}
-      </div>
-      {jobs.map((j, i) => (
-        <div class="panel" role="tabpanel" id={`panel-${j.id}`} aria-labelledby={`tab-${j.id}`} hidden={i !== 0}>
-          <h3>{j.title}</h3>
-          <p class="meta">{j.period} · {j.client}</p>
-          <ul id={`list-${j.id}`}>
-            {j.bullets.map((b, k) => <li class={k >= VISIBLE ? 'more-item' : ''} set:html={md(b)} />)}
-          </ul>
-          {j.bullets.length > VISIBLE && (
-            <button class="expand" type="button" data-expand={`list-${j.id}`} data-label={`Show ${j.bullets.length - VISIBLE} more`} aria-expanded="false">Show {j.bullets.length - VISIBLE} more</button>
-          )}
-        </div>
-      ))}
-    </div>
-  </section>
-
-  <section class="marquee reveal" aria-label="Recognition">
-    <div class="track">
-      {[...recognition, ...recognition].map((r) => <span class="item"><span class="star">✦</span>{r}</span>)}
-    </div>
-  </section>
-
-  <section class="block reveal" id="writing">
-    <h2><span class="num">04</span>writing</h2>
-    <p class="lede">
-      Notes on mechanisms that firmware engineers keep meeting: how things work, why they fail,
-      and what the fix pattern looks like.
-    </p>
-    <ul class="posts">
-      {posts.map((p, i) => (
-        <li class="reveal" style={`--i: ${i}`}>
-          <time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time>
-          <div>
-            <h3><a href={`/writing/${p.id}`}>{p.data.title}</a></h3>
-            <p>{p.data.summary}</p>
-            <div class="tags">{p.data.tags.map((t) => <span>#{t}</span>)}</div>
-          </div>
-        </li>
-      ))}
+    <ul class="principles" aria-label="How I work">
+      {principles.map((p) => <li><b>{p.title}</b><span>{p.body}</span></li>)}
     </ul>
-    <a class="more" href="/writing">All writing →</a>
-  </section>
-
-  <section class="block reveal" id="tooling">
-    <h2><span class="num">05</span>tooling</h2>
-    <p class="lede">
-      Tools I built for bring-up and debug work, described by the problem each one solved.
-    </p>
-    <div class="grid">{tooling.map((p, i) => <Card p={p} i={i} />)}</div>
-  </section>
-
-  <section class="block reveal" id="projects">
-    <h2><span class="num">06</span>projects</h2>
-    <div class="grid">{projects.map((p, i) => <Card p={p} i={i} />)}</div>
   </section>
 
   <section class="block contact reveal" id="contact">
-    <h2><span class="num">07</span>let's build something that boots</h2>
+    <h2>Let's build something that boots</h2>
     <p>
       Working on a firmware, SoC or wireless problem? Email is fastest. I read everything and reply within two days.
     </p>
     <a class="btn" href={`mailto:${site.email}?subject=Hello%20from%20your%20site`}>Email {site.email}</a>
     <a class="btn gold" href="/Madhevan_Ramalingam_Resume.pdf" target="_blank" rel="noopener">Resume (PDF)</a>
+    <div class="links">
+      <a href={site.github} target="_blank" rel="me noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z"/></svg>GitHub</a>
+      <a href={site.linkedin} target="_blank" rel="me noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.4 20.5h-3.6v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.7H9.3V9h3.4v1.6c.5-.9 1.7-1.8 3.4-1.8 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zM7.1 20.5H3.5V9h3.6v11.5zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg>LinkedIn</a>
+    </div>
     <p class="askme"><span class="hud-label">Ask me about</span>{askMe.map((a) => <span class="chip">{a}</span>)}</p>
   </section>
 </Base>
@@ -183,21 +176,30 @@ const VISIBLE = 4;
   });
 
   // Typewriter on the headline. Server-rendered text stays for no-JS and crawlers.
+  // The cursor stops blinking and fades once the line is complete.
   const h1 = document.querySelector<HTMLElement>('h1.type');
-  if (h1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (h1 && !reduce) {
     const full = h1.dataset.text!;
     const name = h1.dataset.name!;
     const start = full.indexOf(name), end = start + name.length;
-    const render = (n: number) => {
+    const render = (n: number, done = false) => {
       const s = full.slice(0, n);
       const pre = s.slice(0, Math.min(n, start));
       const mid = s.slice(start, Math.min(n, end));
       const post = n > end ? s.slice(end) : '';
-      h1.innerHTML = post ? `${pre}<span class="name">${mid}</span><span class="nw">${post}<span class="cursor"></span></span>` : `${pre}<span class="name nw">${mid}<span class="cursor"></span></span>`;
+      const cur = `<span class="cursor${done ? ' done' : ''}"></span>`;
+      h1.innerHTML = post ? `${pre}<span class="name">${mid}</span><span class="nw">${post}${cur}</span>` : `${pre}<span class="name nw">${mid}${cur}</span>`;
     };
     let n = 0;
     render(0);
-    const tick = () => { n++; render(n); if (n < full.length) setTimeout(tick, n === start ? 220 : 55 + Math.random() * 40); };
+    const tick = () => {
+      n++; render(n);
+      if (n < full.length) setTimeout(tick, n === start ? 220 : 55 + Math.random() * 40);
+      else setTimeout(() => render(n, true), 1800);
+    };
     setTimeout(tick, 300);
+  } else if (h1) {
+    h1.querySelector('.cursor')?.classList.add('done');
   }
 </script>
