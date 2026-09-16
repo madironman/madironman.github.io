@@ -95,11 +95,11 @@ import Base from '../layouts/Base.astro';
   .controls .check { flex-direction: row; align-items: center; gap: 0.5rem; }
   .controls .check input { accent-color: var(--accent); }
   .quick { display: flex; gap: 0.3rem; align-items: center; }
-  .quick button { all: unset; cursor: pointer; font-family: var(--mono); font-size: 0.82rem; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 0.6rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text-dim); }
+  .quick button { all: unset; cursor: pointer; font-family: var(--mono); font-size: 0.82rem; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 0.6rem; border: 1px solid var(--line-strong); border-radius: 3px; color: var(--text-dim); }
   .quick button:hover, .quick button.on { border-color: var(--accent); color: var(--accent); }
   .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
   .presets .hud-label { font-size: 0.82rem; color: var(--gold); margin-right: 0.3rem; }
-  .presets button { all: unset; cursor: pointer; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82rem; min-height: 44px; display: inline-flex; align-items: center; padding: 0 0.9rem; border: 1px solid var(--line); border-radius: 3px; color: var(--text); transition: all 0.15s; }
+  .presets button { all: unset; cursor: pointer; font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82rem; min-height: 44px; display: inline-flex; align-items: center; padding: 0 0.9rem; border: 1px solid var(--line-strong); border-radius: 3px; color: var(--text); transition: all 0.15s; }
   .presets button:hover { border-color: var(--accent); color: var(--accent); }
   .presets button.danger:hover { border-color: var(--gold); color: var(--gold); }
   .readout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.2rem; margin-bottom: 2.5rem; }
@@ -146,13 +146,15 @@ import Base from '../layouts/Base.astro';
   let trace: Cx[] = [];
   let t = 0, raf = 0;
 
-  let ACC = '255, 74, 74', GOLD = '242, 182, 50', TEXT = '226, 217, 211';
+  let ACC = '255, 74, 74', GOLD = '242, 182, 50', TEXT = '226, 217, 211', LIGHT = false;
   const readTheme = () => {
     const s = getComputedStyle(document.documentElement);
     ACC = s.getPropertyValue('--accent-rgb').trim() || ACC;
     GOLD = s.getPropertyValue('--gold-rgb').trim() || GOLD;
-    TEXT = s.getPropertyValue('color-scheme').trim() === 'light' ? '44, 35, 32' : '226, 217, 211';
+    LIGHT = s.getPropertyValue('color-scheme').trim() === 'light';
+    TEXT = LIGHT ? '44, 35, 32' : '226, 217, 211';
   };
+  const lift = (a: number) => (LIGHT ? Math.min(1, a * 1.8) : a);
 
   // The slider runs 0..100 and maps logarithmically onto 1..N, so the low
   // counts where the fit is visibly rough get real travel.
@@ -261,7 +263,7 @@ import Base from '../layouts/Base.astro';
 
     // the drawing itself, solid and dim, so the fit can be judged against it
     if (path.length) {
-      ctx.strokeStyle = `rgba(${TEXT}, 0.35)`; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = `rgba(${TEXT}, ${LIGHT ? 0.45 : 0.35})`; ctx.lineWidth = 1.5;
       ctx.beginPath(); path.forEach((p, i) => (i ? ctx.lineTo(cx + p.re, cy + p.im) : ctx.moveTo(cx + p.re, cy + p.im))); ctx.closePath(); ctx.stroke();
     }
     // live stroke while drawing
@@ -281,9 +283,9 @@ import Base from '../layouts/Base.astro';
       const nx = x + c.amp * Math.cos(ang), ny = y + c.amp * Math.sin(ang);
       if (circles) {
         // every circle in use is drawn, however small
-        ctx.strokeStyle = `rgba(${GOLD}, ${c.amp < 1 ? 0.6 : 0.32})`; ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(${GOLD}, ${lift(c.amp < 1 ? 0.6 : 0.32)})`; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(x, y, Math.max(c.amp, 0.4), 0, Math.PI * 2); ctx.stroke();
-        ctx.strokeStyle = `rgba(${GOLD}, 0.7)`;
+        ctx.strokeStyle = `rgba(${GOLD}, ${lift(0.7)})`;
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
       }
       x = nx; y = ny;

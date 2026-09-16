@@ -19,16 +19,19 @@
     const fine = window.matchMedia('(pointer: fine)').matches;
     const tSnr = document.getElementById('t-snr')!, tEvm = document.getElementById('t-evm')!, tCfo = document.getElementById('t-cfo')!, tLock = document.getElementById('t-lock')!, tHarm = document.getElementById('t-harm')!;
 
-    let ACC = '255, 74, 74', GOLD = '242, 182, 50', CORE = '160, 228, 255';
+    let ACC = '255, 74, 74', GOLD = '242, 182, 50', CORE = '160, 228, 255', LIGHT = false;
     const readTheme = () => {
       const s = getComputedStyle(document.documentElement);
       ACC = s.getPropertyValue('--accent-rgb').trim() || ACC;
       GOLD = s.getPropertyValue('--gold-rgb').trim() || GOLD;
       CORE = s.getPropertyValue('--reactor-rgb').trim() || CORE;
+      LIGHT = s.getPropertyValue('color-scheme').trim() === 'light';
     };
-    const A = (a: number) => `rgba(${ACC}, ${a})`;
-    const G = (a: number) => `rgba(${GOLD}, ${a})`;
-    const C = (a: number) => `rgba(${CORE}, ${a})`;
+    // faint strokes need roughly double the alpha on the light ground
+    const lift = (a: number) => (LIGHT ? Math.min(1, a * 2) : a);
+    const A = (a: number) => `rgba(${ACC}, ${lift(a)})`;
+    const G = (a: number) => `rgba(${GOLD}, ${lift(a)})`;
+    const C = (a: number) => `rgba(${CORE}, ${lift(a)})`;
 
     let w = 0, h = 0, raf = 0, visible = true;
     const t0 = performance.now();
