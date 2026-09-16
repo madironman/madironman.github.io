@@ -197,8 +197,9 @@ section.block h2, section.block > h1 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); 
 .lede { color: var(--text-dim); max-width: 640px; margin: -0.8rem 0 1.6rem; font-size: 1.02rem; }
 
 /* ---- stats strip ---- */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-top: 1rem; }
-.stat { background: var(--bg-2); padding: 1.1rem 1.4rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin: 1rem 0 0; }
+.stat { background: var(--bg-2); padding: 1.1rem 1.4rem; display: flex; flex-direction: column-reverse; gap: 0.15rem; }
+.stat dd, .stat dt { margin: 0; }
 .stat .value { font-family: var(--display); font-weight: 800; font-size: 1.9rem; color: var(--head); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .stat .label { font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.78rem; color: var(--text-dim); }
 .stat.hi { background: linear-gradient(135deg, var(--bg-2), var(--accent-dim)); }
@@ -249,7 +250,7 @@ section.block h2, section.block > h1 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); 
 .expand:hover { text-decoration: underline; text-underline-offset: 4px; }
 
 /* ---- recognition: static row ---- */
-.recognition { display: flex; flex-wrap: wrap; gap: 0.5rem 1.8rem; justify-content: center; padding: 1rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.recognition { list-style: none; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.8rem; justify-content: center; padding: 1rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .recognition .item { font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82rem; color: var(--text-dim); white-space: nowrap; }
 .recognition .star { color: var(--gold); margin-right: 0.5rem; }
 @media (max-width: 600px) { .recognition { justify-content: flex-start; } .recognition .item { white-space: normal; } }
@@ -305,7 +306,7 @@ section.block h2, section.block > h1 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); 
 /* ---- contact ---- */
 .contact { text-align: center; max-width: 600px; margin: 0 auto; }
 .contact .btn + .btn { margin-left: 0.75rem; }
-.contact .links { display: flex; justify-content: center; gap: 0.4rem; margin-top: 1.4rem; }
+.contact .links { display: flex; justify-content: center; gap: 0.4rem; margin-top: 1.4rem; font-style: normal; }
 .contact .links a { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.6rem 0.9rem; min-height: 44px; color: var(--text-dim); font-family: var(--hud); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82rem; }
 .contact .links a:hover { color: var(--accent); text-decoration: none; }
 .contact .links svg { width: 20px; height: 20px; }

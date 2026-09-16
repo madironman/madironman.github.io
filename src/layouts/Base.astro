@@ -192,9 +192,10 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <a class="skip" href="#main">Skip to content</a>
     <div class="progress" id="progress" aria-hidden="true"></div>
     <Field />
-    <nav class="nav" aria-label="Primary">
+    <header class="nav">
       <div class="wrap">
-        <a class="brand" href="/"><span class="core"></span>madhevan</a>
+        <a class="brand" href="/" aria-label="madhevan, home"><span class="core" aria-hidden="true"></span>madhevan</a>
+        <nav aria-label="Primary">
         <ul id="nav-menu">
           <li><a href="/#experience">Experience</a></li>
           <li><a href="/#writing">Writing</a></li>
@@ -208,6 +209,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
             <a href={`mailto:${site.email}`} aria-label="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
           </li>
         </ul>
+        </nav>
         <div class="icons">
           <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle light and dark theme">
             <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -219,13 +221,13 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
           </button>
         </div>
       </div>
-    </nav>
+    </header>
     <main class="wrap" id="main" tabindex="-1">
       <slot />
     </main>
     <footer>
       <div class="wrap">
-        <div class="row">
+        <nav class="row" aria-label="Footer">
           <span>© {new Date().getFullYear()} {site.fullName}</span>
           <a href={site.github} target="_blank" rel="me noopener">GitHub</a>
           <a href={site.linkedin} target="_blank" rel="me noopener">LinkedIn</a>
@@ -233,7 +235,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
           <a href="/rss.xml">RSS</a>
           <a href="https://github.com/madironman/madironman.github.io" target="_blank" rel="noopener">Source</a>
           <a href="/humans.txt">humans.txt</a>
-        </div>
+        </nav>
       </div>
     </footer>
     <Motion />
