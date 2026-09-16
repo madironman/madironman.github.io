@@ -118,23 +118,26 @@
     }
 
     // Fourier synthesis of a square wave: r_n = (4/pi)/n for odd n. Harmonics follow cursor x.
-    let harm = 5, speedBoost = 1;
+    let harmF = 5, harm = 5;
     function epicycles(t: number, dt: number) {
       const amp = Math.min(36, h * 0.05);
-      const baseY = h - amp * 1.9 - 18;
+      const baseY = h - amp * 3.1 - 10;   // band stays above the cue/formula strip
       const cx0 = 24 + amp * 1.6;
       const traceX = cx0 + amp * 1.6 + 28;
-      const target = fine && px >= 0 ? 1 + Math.round(8 * Math.min(1, Math.max(0, px / w))) : 5;
-      harm = target;
-      const boostTarget = 1 + Math.min(3, ptrSpeed / 700);
-      speedBoost += (boostTarget - speedBoost) * Math.min(1, dt * 3);
+      // harmonic count glides toward the cursor's x position (1 at the left edge, 7 at the right)
+      const target = fine && px >= 0 ? 1 + 6 * Math.min(1, Math.max(0, px / w)) : 5;
+      harmF += (target - harmF) * Math.min(1, dt * 0.8);
+      harm = Math.round(harmF);
+      const frac = Math.min(1, Math.max(0, harmF - Math.floor(harmF)));
+      const top = Math.ceil(harmF);
       ptrSpeed *= Math.pow(0.2, dt);
-      const speed = 1.4 * speedBoost;
+      const speed = 1.4;
 
       let x = cx0, y = baseY;
-      for (let k = 1; k <= harm; k++) {
+      for (let k = 1; k <= top; k++) {
         const n = 2 * k - 1;
-        const r = (amp * 4) / (Math.PI * n);
+        const scale = k === top && top > Math.floor(harmF) ? frac : 1;
+        const r = ((amp * 4) / (Math.PI * n)) * scale;
         const ang = n * t * speed;
         ctx.strokeStyle = G(0.32); ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
@@ -146,7 +149,7 @@
       ctx.fillStyle = A(0.95); ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
 
       if (!reduce) { wave.unshift(y); if (wave.length > w) wave.length = w; }
-      else if (wave.length === 0) { for (let i = 0; i < w; i++) { let s = 0; for (let k = 1; k <= harm; k++) { const n = 2 * k - 1; s += Math.sin(n * (t * speed - i * 0.02)) / n; } wave.push(baseY + (amp * 4 / Math.PI) * s); } }
+      else if (wave.length === 0) { for (let i = 0; i < w; i++) { let s = 0; for (let k = 1; k <= top; k++) { const n = 2 * k - 1; const sc = k === top && top > Math.floor(harmF) ? frac : 1; s += sc * Math.sin(n * (t * speed - i * 0.02)) / n; } wave.push(baseY + (amp * 4 / Math.PI) * s); } }
 
       ctx.setLineDash([3, 5]); ctx.strokeStyle = A(0.4); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(traceX, wave[0] ?? y); ctx.stroke();
