@@ -313,7 +313,7 @@ section.block h2 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); font-weight: 800; ma
 footer { text-align: center; font-family: var(--mono); font-size: 0.78rem; color: var(--text-dim); padding: 2.5rem 0 2rem; }
 footer a { color: var(--text-dim); }
 footer .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.2rem 1.2rem; }
-footer .row a { display: inline-flex; align-items: center; min-height: 32px; }
+footer .row a, footer .row span { display: inline-flex; align-items: center; min-height: 32px; }
 
 /* ---- article ---- */
 .article { max-width: 720px; margin: 0 auto; padding: 2.5rem 0 4rem; }
