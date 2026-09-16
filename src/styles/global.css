@@ -378,4 +378,7 @@ main, footer { position: relative; z-index: 1; }
 .hero .telemetry span { color: var(--text); }
 .hero .telemetry .ok { color: var(--accent); }
 .hero .telemetry .busy { color: var(--gold); }
+.hero .telemetry .plus { color: var(--gold); }
+.hero .telemetry .minus { color: rgb(var(--reactor-rgb)); }
+.hero .telemetry .hint { color: var(--text-dim); opacity: 0.7; }
 @media (max-width: 760px) { .hero .telemetry { display: none; } }

@@ -8,7 +8,7 @@
 // Theme-aware, reduced-motion aware, paused off-screen or when hidden.
 ---
 <canvas class="hud" id="hud" aria-hidden="true"></canvas>
-<p class="telemetry" id="telemetry" aria-hidden="true">64-QAM · SNR <span id="t-snr">30</span> dB · EVM <span id="t-evm">3.2</span>% · CFO <span id="t-cfo">0</span> kHz · <span id="t-lock">locked</span></p>
+<p class="telemetry" id="telemetry" aria-hidden="true">64-QAM · SNR <span id="t-snr">30</span> dB · EVM <span id="t-evm">3.2</span>% · CFO <span id="t-cfo">0</span> kHz · <span id="t-lock">locked</span><span class="sep"> · </span>cursor <span id="t-q" class="plus">+q</span> <span class="hint">double-click to flip</span></p>
 <p class="formula">y(t) = 4/π · Σ<sub>k=1..<span id="t-harm">5</span></sub> sin((2k−1)ωt) / (2k−1) <a href="/fourier">draw your own →</a></p>
 
 <script>
