@@ -1,0 +1,41 @@
+---
+import Base from '../../layouts/Base.astro';
+import { render } from 'astro:content';
+import { getNotes, fmtDate, isoDate, smart } from '../../data/writing';
+import { site } from '../../data/site';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  return notes.map((note) => ({ params: { slug: note.id }, props: { note } }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+const { date, tags } = note.data;
+const title = smart(note.data.title);
+const summary = smart(note.data.summary);
+---
+<Base title={title} description={summary} article={{ published: date, tags }}>
+  <article class="note" aria-labelledby="note-title">
+    <aside class="note-side">
+      <a class="back" href="/#writing">← Writing</a>
+      <p class="when"><time datetime={isoDate(date)}>{fmtDate(date)}</time></p>
+      {tags.length > 0 && (
+        <p class="note-tags">
+          {tags.map((t, i) => <Fragment><span class="nw">{t}{i < tags.length - 1 && ' ·'}</span>{' '}</Fragment>)}
+        </p>
+      )}
+    </aside>
+    <div class="note-main">
+      <h1 id="note-title">{title}</h1>
+      <p class="dek">{summary}</p>
+      <div class="prose">
+        <Content />
+      </div>
+      <footer class="note-foot">
+        <p>Written by <a href="/">{site.name}</a>, {site.title}.</p>
+        <p><a href="/#writing">More writing</a> · <a href={site.resume}>Resume (PDF)</a> · <a href={`mailto:${site.email}`}>Email</a></p>
+      </footer>
+    </div>
+  </article>
+</Base>

@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+<Base title="Page not found" description="This page does not exist on madironman.github.io." noindex>
+  <section class="notfound" aria-labelledby="nf-title">
+    <h1 id="nf-title">Page not found</h1>
+    <p class="lede">Nothing lives at this address.</p>
+    <ul class="actions">
+      <li><a class="btn primary" href="/">Go to the home page</a></li>
+      <li><a class="btn" href="/#writing">Writing</a></li>
+      <li><a class="btn" href={site.resume}>Resume <span class="btn-sub">PDF</span></a></li>
+    </ul>
+  </section>
+</Base>

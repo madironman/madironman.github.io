@@ -1,0 +1,37 @@
+// Identity and page metadata. Wording mirrors the signed-off resume.
+export const site = {
+  url: 'https://madironman.github.io',
+  name: 'Madhevan Ramalingam',
+  title: 'WLAN Firmware & Driver Engineer',
+  focus: ['SoC bring-up', 'Low-power architecture', 'Pre-silicon emulation'],
+  description:
+    'Madhevan Ramalingam, WLAN firmware and driver engineer in Chennai, India. 6+ years in embedded systems, most of them on 802.11 WLAN silicon: low-power SoC architecture, pre-silicon bring-up, host–firmware transports over PCIe, SDIO and on-die AXI, and now a Windows Wi-Fi 6/6E driver.',
+  email: 'madhevan1998@gmail.com',
+  linkedin: 'https://www.linkedin.com/in/madhevan-ramalingam/',
+  linkedinLabel: 'linkedin.com/in/madhevan-ramalingam',
+  github: 'https://github.com/madironman',
+  githubLabel: 'github.com/madironman',
+  resume: '/Madhevan_Ramalingam_Resume.pdf',
+  location: 'Chennai, India',
+  employer: 'embedUR Systems',
+  currentRole: 'Technical Lead',
+  alumniOf: 'SRM Easwari Engineering College (Anna University)',
+  ogImage: '/og.png',
+  updated: 'November 2026',
+  // Structured-data topics; every item appears in the resume's skills or summary.
+  knowsAbout: [
+    'IEEE 802.11 (Wi-Fi 6/6E)',
+    '802.11 power save',
+    'Windows kernel-mode drivers (WiFiCx)',
+    'SoC bring-up',
+    'Pre-silicon emulation',
+    'PCIe',
+    'SDIO',
+    'AXI',
+    'ARM Cortex-R4/M4/M52',
+    'FreeRTOS',
+    'JTAG and OpenOCD',
+    'Embedded Linux',
+    'C',
+  ],
+};
