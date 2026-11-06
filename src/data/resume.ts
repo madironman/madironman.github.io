@@ -100,7 +100,7 @@ export const engagements: Engagement[] = [
         title: 'Development before first silicon',
         problem: 'The SoC’s host driver and transport had to be developed before first silicon.',
         approach:
-          'Conceived and designed a stand-in MCU platform on an existing combo chip: its Bluetooth Cortex-M4 booted a FreeRTOS host image through a UART-patch and JTAG load chain and ran the transport against the WLAN Cortex-R4, with cross-core doorbells built from timer and chip-level interrupt registers.',
+          'Conceived and designed a stand-in MCU platform on an existing combo chip, and wrote its interrupt and DMA code. The chip’s Bluetooth Cortex-M4 booted a FreeRTOS host image through a UART-patch and JTAG load chain and ran the transport against the WLAN Cortex-R4, with cross-core doorbells built from timer and chip-level interrupt registers.',
         result: '~90% of the host-driver and transport development happened before first silicon.',
       },
       {
@@ -134,6 +134,7 @@ export const engagements: Engagement[] = [
         items: [
           '**Kept the M2M DMA engine usable despite a silicon FSM defect,** profiling it against memcpy to steer the hardware team to the root cause, and devised the runtime workaround that routes only the affected transfers through memcpy.',
           '**Unblocked the SoC’s deep-sleep mode despite a silicon RC-oscillator enable-latch defect,** bringing the MCU’s RC clock up via the WLAN core’s internal JTAG master, then via an LDO overvolt applied only around sleep, and made the MCU an always-on wake source.',
+          '**Restored core discovery on the new SoC** by handling, in the EROM parser, a silicon bug that left the MCU core out of the chip’s enumeration ROM.',
         ],
       },
       {
