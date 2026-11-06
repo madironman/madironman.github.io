@@ -55,7 +55,7 @@ export const engagements: Engagement[] = [
     scope: 'Windows Wi-Fi driver',
     dates: 'Jul 2026 – Present',
     intro:
-      '**Main contributor** to a Windows 11 WiFiCx driver for a Wi-Fi 6/6E PCIe chipset on ARM64, porting behaviour function by function from the Linux brcmfmac driver.',
+      '**Main contributor** to a Windows 11 WiFiCx driver for a Wi-Fi 6/6E PCIe chipset on ARM64, ported from the Linux brcmfmac driver, and to its wl.exe / dhd.exe diagnostics tools.',
     cases: [
       {
         id: 'infineon-handshake',
@@ -67,9 +67,9 @@ export const engagements: Engagement[] = [
       {
         id: 'infineon-recovery',
         title: 'Resets, surprise removal and firmware halts',
-        problem: 'Resets, surprise removal and firmware halts on two board designs.',
-        approach: 'Added recovery (probe-time reset, FLR fallback, the dongle stopped before any DMA free), and made teardown and the ring layer safe: timers, DPCs and work items flushed before free, and a sync-marker check before parsing ring entries.',
-        result: 'The driver restarts automatically with a coredump after a firmware halt.',
+        problem: 'The driver had to survive resets, surprise removal and firmware halts on two board designs.',
+        approach: 'Added recovery paths: a probe-time reset and an FLR fallback.',
+        result: 'The driver restarts automatically, with a coredump, after a firmware halt.',
       },
     ],
     more: [
@@ -77,8 +77,6 @@ export const engagements: Engagement[] = [
         label: 'Also on this engagement',
         items: [
           '**Implemented Windows PCIe power management:** firmware D3 handshake, hot resume without a firmware reload (cold-resume fallback), S0 idle, Modern Standby, and wake-on-WLAN with ARP/NS/GTK-rekey offload.',
-          '**Built the wl.exe / dhd.exe diagnostics tools and GUI** in C# on driver passthrough IOCTLs.',
-          '**Wrote the driver’s board test suite** and both project wikis.',
         ],
       },
     ],
@@ -109,7 +107,7 @@ export const engagements: Engagement[] = [
         id: 'synaptics-emulator',
         title: 'Test turnaround on the Veloce emulator',
         problem: 'WLAN test turnaround on the Veloce emulator took 8 h, and the emulator was used only for bring-up.',
-        approach: 'Ran the emulation hosts headless with SSH access, and built the full test-automation framework.',
+        approach: 'Built the full test-automation framework, and ran the emulation hosts headless over SSH.',
         result:
           'Turnaround cut from 8 h to ~30 min, and emulator utilisation pushed toward ~90% with nightly regressions and pre-merge checks. The team then released ROM for a tapeout in one week.',
       },
@@ -139,10 +137,9 @@ export const engagements: Engagement[] = [
         ],
       },
       {
-        label: 'Low power and image size',
+        label: 'Low power',
         items: [
-          '**Implemented dynamic RAM-bank turn-off** for a chip-level sleep-current reduction on an SDIO WLAN chipset, confining packet pools to the last bank and gating it only when every pool was idle; ported it to three earlier chipsets, and designed follow-ons that also gate free memory during active operation.',
-          '**Shrank the firmware image 50–60%** with a multistage download format.',
+          '**Implemented dynamic RAM-bank turn-off** for a chip-level sleep-current reduction on an SDIO WLAN chipset, confining packet pools to the last bank and gating it only when every pool was idle; the new memory layout also shrank the firmware image considerably. Ported it to three earlier chipsets, and designed follow-ons that also gate free memory during active operation.',
         ],
       },
       {
@@ -154,7 +151,7 @@ export const engagements: Engagement[] = [
       },
       {
         label: 'Mentoring',
-        items: ['**Mentored two engineers:** an intern in C and how C programs map onto ARM memory, and a new power-save engineer in the hardware, the power-save mechanisms and the new SoC’s power-save design.'],
+        items: ['**Mentored two engineers,** an intern and a new power-save engineer, through low-level debug and the new SoC’s power-save design; both went on to earn customer appreciation for their work.'],
       },
     ],
   },
@@ -174,9 +171,9 @@ export const engagements: Engagement[] = [
       {
         id: 'hirschmann-sfp',
         title: 'Hot-pluggable SFP modules',
-        problem: 'Hot-pluggable SFP module support on three switch platforms, with module data and SFP-to-SFP traffic to restore.',
+        problem: 'On three switch platforms, hot-pluggable SFP modules returned no module data and passed no SFP-to-SFP traffic.',
         approach: 'Added the missing device-tree entries, and resolved I2C address collisions with a dummy-register scheme.',
-        result: 'SFP module support brought up on all three platforms, with module data and SFP-to-SFP traffic restored.',
+        result: 'Module data and SFP-to-SFP traffic restored on all three platforms.',
       },
     ],
     more: [],
@@ -192,7 +189,7 @@ export const engagements: Engagement[] = [
         title: 'Lab test clients through a hardware shortage',
         problem: 'Test-client laptops were expensive and scarce during a hardware shortage, and testers had to find a free one by asking in a Teams channel.',
         approach:
-          'Replaced the laptops with Raspberry Pi clients and automated their allocation, so test scripts claimed any free Pi for iperf runs. Also one of five volunteers who brought up the lab’s CMTS server.',
+          'Replaced the laptops with Raspberry Pi clients and automated their allocation, so test scripts claimed any free Pi for iperf runs. Also one of five engineers who brought up the lab’s CMTS server.',
         result: 'Client test-machine cost cut ~90%.',
       },
     ],
