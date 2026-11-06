@@ -39,7 +39,7 @@ With the snapshot in hand, the stall usually reads out in one line. A representa
 | Posted to receive DMA | 0 |
 | Held by software, unprocessed receive | 62 |
 | Held by host-side receive path | 2 |
-| Far-side backlog | 180 |
+| Far-side backlog | 300 |
 
 Read it top to bottom. The pool is empty. Transmit holds nothing, so it is not the hog. The receive DMA has nothing posted, so it cannot land the frames the far side is trying to send, and the far side's backlog confirms it is trying. Nearly the whole pool is sitting in received frames that software has not processed yet. Why has software not processed them? Because processing them means sending a reply, and sending needs a buffer, and there are none.
 

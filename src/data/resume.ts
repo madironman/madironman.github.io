@@ -68,7 +68,7 @@ export const engagements: Engagement[] = [
         id: 'infineon-recovery',
         title: 'Resets, surprise removal and firmware halts',
         problem: 'Resets, surprise removal and firmware halts on two board designs.',
-        approach: 'Added recovery: probe-time reset, FLR fallback, and the dongle stopped before any DMA free.',
+        approach: 'Added recovery (probe-time reset, FLR fallback, the dongle stopped before any DMA free), and made teardown and the ring layer safe: timers, DPCs and work items flushed before free, and a sync-marker check before parsing ring entries.',
         result: 'The driver restarts automatically with a coredump after a firmware halt.',
       },
     ],
@@ -94,40 +94,39 @@ export const engagements: Engagement[] = [
         title: 'Sleep architecture for a combined MCU + Wi-Fi SoC',
         problem: 'Either core of a combined MCU + Wi-Fi SoC should be able to sleep without dropping traffic.',
         approach:
-          'Designed the sleep architecture: a four-state machine (MCU × WLAN, each awake/asleep) in which WLAN firmware moves from host buffers to local TCM buffers while the MCU sleeps.',
+          'Designed the sleep architecture: a four-state machine (MCU × WLAN, each awake/asleep) in which WLAN firmware moves from host buffers to local TCM buffers while the MCU sleeps, with race-free entry and exit (level-held wake line, decision-time sleep veto, stuck-wake watchdog).',
         result: 'Design signed off; implementation under way when the engagement closed.',
       },
       {
         id: 'synaptics-presilicon',
         title: 'Development before first silicon',
-        problem: 'The SoC’s development had to proceed before first silicon.',
+        problem: 'The SoC’s host driver and transport had to be developed before first silicon.',
         approach:
-          'Turned an existing dongle chip’s Bluetooth Cortex-M4 into a stand-in MCU host, with startup code written from scratch and FreeRTOS brought up on it.',
-        result: '~90% of the SoC’s development proceeded before first silicon.',
+          'Conceived and designed a stand-in MCU platform on an existing combo chip: its Bluetooth Cortex-M4 booted a FreeRTOS host image through a UART-patch and JTAG load chain and ran the transport against the WLAN Cortex-R4, with cross-core doorbells built from timer and chip-level interrupt registers.',
+        result: '~90% of the host-driver and transport development happened before first silicon.',
       },
       {
         id: 'synaptics-emulator',
-        title: 'Veloce emulation run time',
-        problem: 'A Veloce emulation run took 8 h, and there was no WLAN test automation yet.',
-        approach: 'Fixed the launch flow and built the first WLAN test automation.',
+        title: 'Test turnaround on the Veloce emulator',
+        problem: 'WLAN test turnaround on the Veloce emulator took 8 h, and the emulator was used only for bring-up.',
+        approach: 'Ran the emulation hosts headless with SSH access, and built the full test-automation framework.',
         result:
-          'A Veloce emulation run cut from 8 h to 30 min, and emulator utilisation pushed toward ~90%. The team then released ROM for a tapeout in one week.',
+          'Turnaround cut from 8 h to ~30 min, and emulator utilisation pushed toward ~90% with nightly regressions and pre-merge checks. The team then released ROM for a tapeout in one week.',
       },
     ],
     more: [
       {
         label: 'Bring-up and debug',
         items: [
-          '**Brought up JTAG/OpenOCD debug on the Veloce emulator,** root-causing four RTL and place-and-route faults in the debug path, and added an OpenOCD backend so the verification teams’ TCL scripts ran unmodified.',
+          '**Brought up JTAG/OpenOCD debug on the Veloce emulator,** root-causing three RTL and place-and-route faults in the debug path and redesigning JTAG fetch for emulation speed, and added an OpenOCD backend so the verification teams’ TCL scripts ran unmodified.',
           '**Drove emulator bring-up of a new SoC from reset to ping,** and contributed the architectural analysis behind a 2× transport throughput improvement and a shorter MCU boot.',
-          '**Eliminated spurious MCU–WLAN interrupts** by tracing them, with a self-written instrumented driver, to a clock-domain-crossing race on deassertion, then deferring clear-pending to exploit level-triggered semantics.',
+          '**Designed the MCU–WLAN interrupt architecture** of the on-die transport (PCIe msgbuf rings re-hosted on AXI): a FreeRTOS-safe NVIC driver on CMSIS and an instrumented test driver measuring latency, misses and spurious hits, which caught a clock-domain-crossing race on deassertion, fixed by deferring clear-pending.',
           '**Resolved a day-0 field escalation** by programming internal interrupt generators and an on-chip JTAG master to reach otherwise inaccessible debug registers.',
         ],
       },
       {
-        label: 'Transport, data path and security',
+        label: 'Data path and security',
         items: [
-          '**Designed and implemented the on-die MCU–WLAN transport,** host driver and firmware device driver, by re-hosting the PCIe msgbuf ring protocol on AXI over a single shared DMA channel.',
           '**Ended zero-throughput stalls under sustained bidirectional SDIO traffic** by diagnosing an RX pool-starvation loop from the pool counters and reserving a floor of packet pools for RX DMA refill.',
           '**Hardened WPA2 without breaking mixed legacy networks** by blocking pairwise TKIP while keeping group TKIP, enforced across the supplicant, host driver and firmware MAC key-install path.',
         ],
@@ -135,27 +134,27 @@ export const engagements: Engagement[] = [
       {
         label: 'Silicon workarounds',
         items: [
-          '**Kept the M2M DMA engine usable despite a silicon FSM defect,** profiling it against memcpy to steer the hardware team to the root cause and routing only the corrupting transfers through memcpy at runtime.',
-          '**Unblocked the SoC’s deep-sleep mode despite a silicon RC-oscillator enable-latch defect,** bringing the MCU’s RC clock up via the WLAN core’s internal JTAG master, then via an LDO overvolt applied only around sleep.',
+          '**Kept the M2M DMA engine usable despite a silicon FSM defect,** profiling it against memcpy to steer the hardware team to the root cause, and devised the runtime workaround that routes only the affected transfers through memcpy.',
+          '**Unblocked the SoC’s deep-sleep mode despite a silicon RC-oscillator enable-latch defect,** bringing the MCU’s RC clock up via the WLAN core’s internal JTAG master, then via an LDO overvolt applied only around sleep, and made the MCU an always-on wake source.',
         ],
       },
       {
         label: 'Low power and image size',
         items: [
-          '**Contributed dynamic RAM-bank turn-off** to a chip-level sleep-current reduction on an SDIO WLAN chipset, later ported to three earlier chipsets.',
+          '**Implemented dynamic RAM-bank turn-off** for a chip-level sleep-current reduction on an SDIO WLAN chipset, confining packet pools to the last bank and gating it only when every pool was idle; ported it to three earlier chipsets, and designed follow-ons that also gate free memory during active operation.',
           '**Shrank the firmware image 50–60%** with a multistage download format.',
         ],
       },
       {
         label: 'Debug tooling',
         items: [
-          '**Wrote debug tooling for pre-tapeout bring-up:** a crash-triage engine that rebuilds system state from raw RAM dumps, a heap profiler, a struct-layout analyser, and a strap-pin kit that made remote CI reflash possible.',
-          '**Built a disassembly scan for illegal undefined-instruction patterns** that surfaced 200+ latent crash points, and fixed a ROM-table parser inconsistency that broke system discovery once a second core was added.',
+          '**Wrote bring-up debug tooling:** a crash-triage engine that rebuilds system state from raw RAM dumps, a heap profiler, a struct-layout analyser, and a strap-pin kit that made remote CI reflash possible.',
+          '**Audited release binaries with a self-built disassembly scan** for illegal undefined-instruction patterns, surfacing 200+ latent crash points.',
         ],
       },
       {
         label: 'Mentoring',
-        items: ['**Mentored two engineers** through bring-up and low-level debug.'],
+        items: ['**Mentored two engineers:** an intern in C and how C programs map onto ARM memory, and a new power-save engineer in the hardware, the power-save mechanisms and the new SoC’s power-save design.'],
       },
     ],
   },
@@ -167,10 +166,10 @@ export const engagements: Engagement[] = [
     cases: [
       {
         id: 'hirschmann-boot',
-        title: 'Boot time in a VxWorks-to-Linux port',
-        problem: 'Boot took 165–172 s on two industrial-switch platforms during a VxWorks-to-Linux port.',
+        title: 'Boot-time regression in a VxWorks-to-Linux port',
+        problem: 'After a VxWorks-to-Linux port, Linux took 165–172 s to boot on two industrial-switch platforms.',
         approach: 'Traced a 10 s per-slot retry loop in the hardware scan, and moved module initialisation into two tasks.',
-        result: 'Boot time cut to 40–45 s.',
+        result: 'Linux boot cut to 40–45 s.',
       },
       {
         id: 'hirschmann-sfp',
@@ -190,10 +189,10 @@ export const engagements: Engagement[] = [
     cases: [
       {
         id: 'commscope-lab',
-        title: 'Lab provisioning through a hardware shortage',
-        problem: 'Client test-machine cost, during a hardware shortage.',
+        title: 'Lab test clients through a hardware shortage',
+        problem: 'Test-client laptops were expensive and scarce during a hardware shortage, and testers had to find a free one by asking in a Teams channel.',
         approach:
-          'Built a Raspberry Pi replacement for the provisioning client, and brought up the lab provisioning system and CMTS server behind it.',
+          'Replaced the laptops with Raspberry Pi clients and automated their allocation, so test scripts claimed any free Pi for iperf runs. Also one of five volunteers who brought up the lab’s CMTS server.',
         result: 'Client test-machine cost cut ~90%.',
       },
     ],
@@ -201,7 +200,7 @@ export const engagements: Engagement[] = [
       {
         label: 'Also on this engagement',
         items: [
-          '**Debugged DOCSIS signal-strength, DHCP, Green Ethernet and connection defects** on SURFboard G34 cable gateways across the SNMP and dmcli back ends.',
+          '**Debugged DOCSIS signal-strength, DHCP, Green Ethernet and public Wi-Fi hotspot (GRE tunnel) connection defects** on SURFboard cable gateways across the SNMP and dmcli back ends.',
         ],
       },
     ],
@@ -215,7 +214,7 @@ export const skills: { label: string; text: string }[] = [
   },
   {
     label: 'Firmware & OS',
-    text: 'RTOS (FreeRTOS, ThreadX), bare-metal bring-up, Windows kernel-mode drivers (KMDF, WiFiCx, NetAdapterCx), embedded Linux (device tree, I2C)',
+    text: 'RTOS (FreeRTOS, ThreadX), CMSIS, bare-metal bring-up, Windows kernel-mode drivers (KMDF, WiFiCx, NetAdapterCx), embedded Linux (device tree, I2C)',
   },
   {
     label: 'SoC & interfaces',
