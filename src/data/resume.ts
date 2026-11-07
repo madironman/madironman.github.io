@@ -92,7 +92,7 @@ export const engagements: Engagement[] = [
         title: 'Sleep architecture for a combined MCU + Wi-Fi SoC',
         problem: 'Either core of a combined MCU + Wi-Fi SoC should be able to sleep without dropping traffic.',
         approach:
-          'Designed the sleep architecture: a four-state machine (MCU × WLAN, each awake/asleep) in which WLAN firmware moves from host buffers to local TCM buffers while the MCU sleeps, with race-free entry and exit (level-held wake line, decision-time sleep veto, stuck-wake watchdog).',
+          'Designed the sleep architecture: a four-state machine (MCU × WLAN, each awake/asleep) in which WLAN firmware moves from host buffers to local TCM buffers while the MCU sleeps, so either core sleeps without dropping traffic.',
         result: 'Design signed off; implementation under way when the engagement closed.',
       },
       {
@@ -109,7 +109,7 @@ export const engagements: Engagement[] = [
         problem: 'WLAN test turnaround on the Veloce emulator took 8 h, and the emulator was used only for bring-up.',
         approach: 'Built the full test-automation framework, and ran the emulation hosts headless over SSH.',
         result:
-          'Turnaround cut from 8 h to ~30 min, and emulator utilisation pushed toward ~90% with nightly regressions and pre-merge checks. The team then released ROM for a tapeout in one week.',
+          'Turnaround cut from 8 h to ~30 min, and emulator utilisation pushed toward ~90% with nightly regressions and pre-merge checks. The team then released ROM for a tapeout in one week instead of the usual one to three months.',
       },
     ],
     more: [
@@ -208,7 +208,7 @@ export const engagements: Engagement[] = [
 export const skills: { label: string; text: string }[] = [
   {
     label: 'Wireless',
-    text: 'IEEE 802.11a/b/g/n/ac/ax (Wi-Fi 6/6E), 802.11 power save (DTIM, PS-Poll, U-APSD, TWT), wake-on-WLAN and offloads, WPA2/WPA3 (CCMP, TKIP)',
+    text: 'IEEE 802.11, power save (DTIM, PS-Poll, U-APSD, TWT), wake-on-WLAN and offloads',
   },
   {
     label: 'Firmware & OS',
