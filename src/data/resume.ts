@@ -117,7 +117,7 @@ export const engagements: Engagement[] = [
         label: 'Bring-up and debug',
         items: [
           '**Brought up JTAG/OpenOCD debug on the Veloce emulator,** root-causing three RTL and place-and-route faults in the debug path and redesigning JTAG fetch for emulation speed, and added an OpenOCD backend so the verification teams’ TCL scripts ran unmodified.',
-          '**Drove emulator bring-up of a new SoC from reset to ping,** and contributed the architectural analysis behind a 2× transport throughput improvement and a shorter MCU boot.',
+          '**Drove emulator bring-up of a new SoC from reset to ping,** and shortened its MCU boot by removing a duplicate data-section copy, BSS clear and initialisation that ran in both the startup assembly and crt0.',
           '**Designed the MCU–WLAN interrupt architecture** of the on-die transport (PCIe msgbuf rings re-hosted on AXI): a FreeRTOS-safe NVIC driver on CMSIS and an instrumented test driver measuring latency, misses and spurious hits, which caught a clock-domain-crossing race on deassertion, fixed by deferring clear-pending.',
           '**Resolved a day-0 field escalation** by programming internal interrupt generators and an on-chip JTAG master to reach otherwise inaccessible debug registers.',
         ],
